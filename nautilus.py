@@ -1,3 +1,37 @@
+"""Classes"""
+
+# create home directoy upon execution? spec
+class Directory: 
+    """
+    path to directory? 
+    list of file objects contained within 
+    list of subdirectories within 
+    permissions for self  
+    metadata
+
+    self.path 
+    self.files = []
+    self.subdir = []
+    self.perms = "32132132"
+    self.owner
+    self.group 
+
+    methods?:
+        - design decision: global or class specific methods 
+        
+
+
+    """
+    pass 
+
+class File: 
+    """
+    permissions for self 
+    reference to its directory? 
+    metadata (owner)
+    """
+    pass 
+
 """Task 1"""
 
 def exit(): 
