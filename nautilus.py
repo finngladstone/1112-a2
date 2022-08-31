@@ -1,6 +1,17 @@
 """Classes"""
 
 # create home directoy upon execution? spec
+# creat root user upon exec
+
+class User:
+    """
+    self.name 
+    self.perms 
+    
+    etc etc 
+
+    """
+
 class Directory: 
     """
     path to directory? 
@@ -13,8 +24,8 @@ class Directory:
     self.files = []
     self.subdir = []
     self.perms = "32132132"
-    self.owner
-    self.group 
+    self.owner 
+    self.parent 
 
     methods?:
         - design decision: global or class specific methods 
@@ -74,6 +85,7 @@ def chown(r, user, path):
     pass 
 
 def adduser(user):
+    # must be root 
     pass 
 
 def deluser(user):
