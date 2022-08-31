@@ -4,38 +4,72 @@
 # creat root user upon exec
 
 class User:
-    """
-    self.name 
-    self.perms 
-    
-    etc etc 
 
-    """
+    Users = [] # class attributes - instance defined within __init__
+    
+    def __init__(self, name) -> None:
+        self.name = name
+        self.__class__.Users.append(self) # check this
+    
+    def remove(self):
+        self.__class__.Users.remove(self)
+        del self # check functionality 
+
 
 class Directory: 
-    """
-    path to directory? 
-    list of file objects contained within 
-    list of subdirectories within 
-    permissions for self  
-    metadata
 
-    self.path 
-    self.files = []
-    self.subdir = []
-    self.perms = "32132132"
-    self.owner 
-    self.parent 
+    Directories = [] # class attributes
 
-    methods?:
-        - design decision: global or class specific methods 
-        
+    def __init__(self, name, perms, parent, user) -> None:
+        self.name = name 
+        self.perms = perms
 
+        self.parent = parent 
+        self.subdir = []
+        self.files = []
 
-    """
-    pass 
+        self.owner = user
+
+        self.__class__.Directories.append(self)
+
+    def remove(self):
+        self.__class__.Users.remove(self)
+        del self
+
+    def changeOwner(self, newOwner):
+        self.owner = newOwner
+
+    def addSubdir(self, dir): 
+        self.subdir.append(dir)
+
+    def removeSubdir(self, dir):
+        self.subdir.remove(dir)
+
+    def addFile(self, file):
+        self.files.append(file)
+
+    def removeFile(self, file): 
+        self.files.remove(file)
+     
 
 class File: 
+
+    Files = []
+
+    def __init__(self, name, user, perms) -> None:
+        self.name = name
+        self.owner = user
+        self.perms = perms
+
+        self.__class__.Files.append(self)
+
+    def remove(self):
+        self.__class__.Files.remove(self)
+        del self 
+
+    def changeOwner(self, newOwner):
+        self.owner = newOwner
+
     """
     permissions for self 
     reference to its directory? 
