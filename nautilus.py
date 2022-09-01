@@ -7,8 +7,9 @@ class User:
 
     Users = [] # class attributes - instance defined within __init__
     
-    def __init__(self, name) -> None:
+    def __init__(self, name, root) -> None:
         self.name = name
+        self.root = root
         self.__class__.Users.append(self) # check this
     
     def remove(self):
@@ -20,9 +21,8 @@ class Directory:
 
     Directories = [] # class attributes
 
-    def __init__(self, name, perms, parent, user) -> None:
+    def __init__(self, name, parent, user) -> None:
         self.name = name 
-        self.perms = perms
 
         self.parent = parent 
         self.subdir = []
@@ -134,8 +134,21 @@ def ls(a, d, l, path):
 
 
 def main():
-    # Need cmdline parser 
-    pass
+
+    root = User("root", True)
+    root_dir = Directory("/", None, root)
+
+    curr_user = root
+    curr_dir = root_dir
+    
+
+
+    while True:
+        start_line = "{}:{}$ ".format(curr_user.name, curr_dir.name)
+        new_cmd = input(start_line)
+    
+        pass 
+
 
 
 if __name__ == '__main__':
