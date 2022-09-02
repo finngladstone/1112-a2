@@ -80,16 +80,23 @@ class File:
 """Task 1"""
 
 def exit(): 
+    print("bye, {}".format(curr_user))
     pass 
 
-def pwd(): 
+def pwd(vwd): 
+    print(vwd) 
+
+def cd(cwd, targetwd):
+    # if target exists
+    #   if perms match
+    #       cd to targetdir
     pass 
 
-def cd(directory):
-    pass 
-
-def mkdir(p, directory):
+def mkdir(directory, p=None):
+    # if p == None and ancestor_fail:
+    #   print("mkdir: Ancestor directory does not exist")
     # default drwxr -x
+    # if dir == None: raise invalidinput
     pass 
 
 def touch(filename):
@@ -135,6 +142,9 @@ def ls(a, d, l, path):
 
 def main():
 
+    fn_dic = {"exit":exit, "pwd":pwd, "cd":cd, "mkdir":mkdir,
+        "touch":touch, "cp":cp}
+
     root = User("root", True)
     root_dir = Directory("/", None, root)
 
@@ -145,9 +155,12 @@ def main():
 
     while True:
         start_line = "{}:{}$ ".format(curr_user.name, curr_dir.name)
-        new_cmd = input(start_line)
-    
-        pass 
+        keyboard = list(input(start_line))
+        
+
+
+
+        
 
 
 
