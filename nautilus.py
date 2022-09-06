@@ -3,25 +3,30 @@
 # create home directoy upon execution? spec
 # creat root user upon exec
 
+
 class User:
 
     Users = [] # class attributes - instance defined within __init__
     
-    def __init__(self, name, root) -> None:
+    def __init__(self, name, root=False) -> None:
         self.name = name
         self.root = root
-        self.__class__.Users.append(self) # check this
+        self.current_dir = None
+        self.__class__.Users.append(self)
     
     def remove(self):
         self.__class__.Users.remove(self)
         del self # check functionality 
+
+    def update_dir(self, dir):
+        self.current_dir = dir
 
 
 class Directory: 
 
     Directories = [] # class attributes
 
-    def __init__(self, name, parent, user) -> None:
+    def __init__(self, name, parent, user=None) -> None:
         self.name = name 
 
         self.parent = parent 
@@ -83,8 +88,8 @@ def exit():
     print("bye, {}".format(curr_user))
     pass 
 
-def pwd(vwd): 
-    print(vwd) 
+def pwd(): 
+    print(curr_dir) 
 
 def cd(cwd, targetwd):
     # if target exists
@@ -146,16 +151,18 @@ def main():
         "touch":touch, "cp":cp}
 
     root = User("root", True)
-    root_dir = Directory("/", None, root)
+    root_dir = Directory("/", None, None)
 
-    curr_user = root
-    curr_dir = root_dir
+    current_user = root 
+    root.update_dir(root_dir)
     
 
 
     while True:
         start_line = "{}:{}$ ".format(curr_user.name, curr_dir.name)
-        keyboard = list(input(start_line))
+        keyboard = input(start_line)
+
+        fn_dic[keyboard]()
         
 
 
