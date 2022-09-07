@@ -17,7 +17,10 @@ class User:
         print("bye, {}".format(self.name))
 
     def pwd(self):
-        print(self.currentDir)
+        print(self.currentDir.name)
+
+    def cd(self):
+        pass 
 
     def mkdir(self, dir, p=None):
         pass 
@@ -55,11 +58,19 @@ class User:
 
 class Directory:
 
-    def __init__(self, name, parent=None) -> None:
+    def __init__(self, name, parent) -> None:
         self.name = name 
         self.parent = parent 
         self.subdirs = []
         self.files = []
+
+        if parent == None:
+            self.path = "/"
+        else:
+            # find path 
+            pass 
+    
+
     
 
 class File:
@@ -67,21 +78,48 @@ class File:
     def __init__(self, name) -> None:
         self.name = name 
     pass 
-
-class Namespace:
-
-    def __init__(self, root) -> None:
-        self.root = root 
-        self.files = []
-        self.dirs = []
     
 
 def main():
 
-    rootDir = Directory("root", None)
+    rootDir = Directory("/", None)
     rootUser = User("root", True, rootDir)
 
-    namespace = Namespace(rootDir) # do i really need this 
+    currUser = rootUser
+    currDir = rootDir
+
+    fnList = {"exit":currUser.exit, "pwd":currUser.pwd, \
+        "cd":currUser.cd, "mkdir":currUser.mkdir, \
+            "touch":currUser.touch}
+
+    while True:
+        lineStart = "{}:{}$ ".format(currUser.name, currDir.path)
+        keyboard = input(lineStart)
+
+        keyboard = keyboard.split()
+
+        cmd = keyboard[0] # fn name 
+
+        if len(keyboard) == 1:
+            try:
+                fnList[cmd]()
+            except KeyError:
+                print("{}: Command not found".format(cmd))
+            
+        else:
+            args = keyboard[-1:0:-1] # reverses args to allow for optional args 
+
+            try:
+                fnList[cmd](args)
+
+            except KeyError:
+                print("{}: Command not found".format(cmd)) 
+
+      
+
+
+        
+
 
 
     
