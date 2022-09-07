@@ -1,6 +1,3 @@
-from tokenize import Name
-
-
 class User:
 
     def __init__(self, name, root=False, currentDir=None) -> None:
@@ -114,16 +111,6 @@ def main():
 
             except KeyError:
                 print("{}: Command not found".format(cmd)) 
-
-      
-
-
-        
-
-
-
-    
-
 
 if __name__ == '__main__':
     main()
