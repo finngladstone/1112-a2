@@ -1,7 +1,7 @@
 from tokenize import Name
 
 
-class User
+class User:
 
     def __init__(self, name, root=False, currentDir=None) -> None:
         self.name = name
@@ -14,7 +14,7 @@ class User
         
     
     def exit(self):
-        print("bye, {}".format())
+        print("bye, {}".format(self.name))
 
     def pwd(self):
         print(self.currentDir)
