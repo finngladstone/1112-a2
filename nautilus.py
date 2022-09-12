@@ -55,7 +55,20 @@ class User:
  
 
     def touch(self, name):
-        pass 
+        if True: # do a perms check here
+            pass 
+
+        for items in self.currentDir.files: # check for name equality in files
+            if name == items.name:
+                return 
+
+        for item in self.currentDir.subdirs: # check for name equality in subdirs 
+            if name == item.name:
+                return 
+
+        self.currentDir.files.append(File(name, self))
+
+            
 
     def cp(self, source, destination):
         pass 
@@ -104,17 +117,14 @@ class Directory:
         if self.parent == None:
             return self 
         else: 
-            self.parent.findRoot()
+            return(self.parent.findRoot())
 
-    
-    
-
-    
 
 class File:
 
-    def __init__(self, name) -> None:
+    def __init__(self, name, user) -> None:
         self.name = name 
+        self.perms = {user : "-rw-r--"} # dictionary to store user perms 
     pass 
     
 
