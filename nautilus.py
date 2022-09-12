@@ -44,14 +44,12 @@ class User:
 
     def mkdir(self, dir, p=None):
 
-        print(dir)
-
         if p: 
             # while loop to recursively create nested directories
             pass
 
         else: 
-            self.currentDir.subdirs.append(Directory(dir, self.currentDir))
+            self.currentDir.subdirs.append(Directory(dir, self.currentDir, self))
  
 
     def touch(self, name):
@@ -100,11 +98,12 @@ class User:
 
 class Directory:
 
-    def __init__(self, name, parent) -> None:
+    def __init__(self, name, parent, user=None) -> None:
         self.name = name 
         self.parent = parent 
         self.subdirs = []
         self.files = []
+        self.perms = {user:"drwxr-x"}
 
     
     def getPath(self):
@@ -134,7 +133,6 @@ def main():
     rootUser = User("root", True, rootDir)
 
     currUser = rootUser
-    currDir = rootDir
 
     fnList = {"exit":currUser.exit, "pwd":currUser.pwd, \
         "cd":currUser.cd, "mkdir":currUser.mkdir, \
