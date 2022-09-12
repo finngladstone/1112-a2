@@ -1,3 +1,6 @@
+from pydoc import getpager
+
+
 class User:
 
     def __init__(self, name, root=False, currentDir=None) -> None:
@@ -7,20 +10,49 @@ class User:
         self.perms = {}
 
     def updateCurrentDir(self, dir):
-        self.currentDir = dir
+
+        if isinstance(dir, Directory):
+            self.currentDir = dir
+        else:
+            print("Directory is wrong file type")
         
     
-    def exit(self):
+    def exit(self): # sorted
         print("bye, {}".format(self.name))
+        exit(0)
 
-    def pwd(self):
-        print(self.currentDir.name)
+    def pwd(self): # sorted? depends on currentDir val which needs addressing
+        print(self.currentDir.getPath())
 
-    def cd(self):
-        pass 
+    def cd(self, dir):
+
+        if dir == '/':
+            return self.currentDir.findRoot()
+
+        for item in self.currentDir.subdirs:
+            if item.name == dir:
+                self.updateCurrentDir(item)
+                return
+
+        for filetem in self.currentDir.files:
+            if filetem.name == dir:
+                print("Destination is a file")
+                return 
+
+
+        print("cd: No such file or directory")
 
     def mkdir(self, dir, p=None):
-        pass 
+
+        print(dir)
+
+        if p: 
+            # while loop to recursively create nested directories
+            pass
+
+        else: 
+            self.currentDir.subdirs.append(Directory(dir, self.currentDir))
+ 
 
     def touch(self, name):
         pass 
@@ -61,11 +93,20 @@ class Directory:
         self.subdirs = []
         self.files = []
 
-        if parent == None:
-            self.path = "/"
-        else:
-            # find path 
-            pass 
+    
+    def getPath(self):
+        if (self.parent == None):
+            return "/"
+        else: 
+            return self.parent.getPath() + self.name + "/"
+
+    def findRoot(self):
+        if self.parent == None:
+            return self 
+        else: 
+            self.parent.findRoot()
+
+    
     
 
     
@@ -90,7 +131,7 @@ def main():
             "touch":currUser.touch}
 
     while True:
-        lineStart = "{}:{}$ ".format(currUser.name, currDir.path)
+        lineStart = "{}:{}$ ".format(currUser.name, currUser.currentDir.getPath())
         keyboard = input(lineStart)
 
         keyboard = keyboard.split()
@@ -107,7 +148,7 @@ def main():
             args = keyboard[-1:0:-1] # reverses args to allow for optional args 
 
             try:
-                fnList[cmd](args)
+                fnList[cmd](*args) # https://stackoverflow.com/questions/3941517/converting-list-to-args-when-calling-function
 
             except KeyError:
                 print("{}: Command not found".format(cmd)) 
