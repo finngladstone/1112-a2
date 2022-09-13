@@ -32,8 +32,8 @@ class User:
 
         for filetem in self.currentDir.files:
             if filetem.name == dir:
-                print("Destination is a file")
-                return 
+                raise FileExistsError
+    
 
 
         print("cd: No such file or directory")
@@ -151,6 +151,8 @@ def main():
                 fnList[cmd]()
             except KeyError:
                 print("{}: Command not found".format(cmd))
+            except TypeError:
+                print("{}: Invalid syntax".format(cmd))
             
         else:
             args = keyboard[-1:0:-1] # reverses args to allow for optional args 
@@ -160,6 +162,10 @@ def main():
 
             except KeyError:
                 print("{}: Command not found".format(cmd)) 
+            except TypeError:
+                print("{}: Invalid syntax".format(cmd))
+            except FileExistsError:
+                print("{}: Destination is a file".format(cmd))
 
 if __name__ == '__main__':
     main()
