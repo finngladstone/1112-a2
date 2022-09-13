@@ -1,6 +1,3 @@
-from pydoc import getpager
-
-
 class User:
 
     def __init__(self, name, root=False, currentDir=None) -> None:
@@ -16,7 +13,6 @@ class User:
         else:
             print("Directory is wrong file type")
         
-    
     def exit(self): # sorted
         print("bye, {}".format(self.name))
         exit(0)
@@ -109,8 +105,12 @@ class Directory:
     def getPath(self):
         if (self.parent == None):
             return "/"
+        elif (self.parent.parent == None):
+            return self.parent.getPath() + self.name 
         else: 
-            return self.parent.getPath() + self.name + "/"
+            return self.parent.getPath() + "/{}".format(self.name)
+
+            
 
     def findRoot(self):
         if self.parent == None:
