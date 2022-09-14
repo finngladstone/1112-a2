@@ -26,6 +26,9 @@ class User:
             self.updateCurrentDir(self.currentDir.findRoot()) 
             return
 
+        elif dir == '.':
+            return
+
         for item in self.currentDir.subdirs:
             if item.name == dir:
                 self.updateCurrentDir(item)
