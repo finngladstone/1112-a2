@@ -55,23 +55,33 @@ class User:
         filels = dir.split("/")
 
         for item in filels:
+            allocated = False
+
             if item == ".":
+                allocated = True
                 pass 
             elif item == "..":
-                workingDir = workingDir.parent
+                if workingDir.parent != None:
+                    workingDir = workingDir.parent
+                allocated = True 
             else:
                 for filetem in workingDir.files:
-                    if filetem.name == dir:
+                    if filetem.name == item:
                         raise FileExistsError
 
                 for surs in workingDir.subdirs:
                     if surs.name == item:
                         workingDir = surs
-                        
-        if workingDir.name == filels[-1]:
-            self.updateCurrentDir(workingDir)
-        else:
-            print("cd: No such file or directory")
+                        allocated = True 
+            
+            if allocated:
+                pass 
+            else:
+                print("cd: No such file or directory")
+                return
+
+        self.updateCurrentDir(workingDir)
+        return
 
     def mkdir(self, dir, p=None): # need to implement perms! 
 
