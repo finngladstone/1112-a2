@@ -29,15 +29,49 @@ class User:
         elif dir == '.':
             return
 
-        for item in self.currentDir.subdirs:
-            if item.name == dir:
-                self.updateCurrentDir(item)
-                return
+        elif dir == '..':
+            if self.currentDir.parent != None:
+                self.updateCurrentDir(self.currentDir.parent)
+            return 
 
-        for filetem in self.currentDir.files:
-            if filetem.name == dir:
-                raise FileExistsError
-    
+        elif dir.count("/") == 0 or (dir.count("/") == 1 and dir[0] == "/"):
+            for filetem in self.currentDir.files:
+                if filetem.name == dir.strip("/"):
+                    raise FileExistsError
+            
+            for item in self.currentDir.subdirs:
+                if item.name == dir.strip("/"):
+                    self.updateCurrentDir(item)
+                    return  
+
+            print("cd: No such file or directory")
+            return
+
+        if dir[0] == '/': # absolute path
+            workingDir = self.currentDir.findRoot()
+        else:
+            workingDir = self.currentDir
+
+        filels = dir.split("/")
+        print(filels)
+        print(workingDir.name)
+
+        for item in filels:
+            if item == ".":
+                pass 
+            elif item == "..":
+                workingDir = workingDir.parent
+            else:
+                for filetem in workingDir.files:
+                    if filetem.name == dir:
+                        raise FileExistsError
+
+                for surs in workingDir.subdirs:
+                    if surs.name == item:
+                        workingDir = item
+                        return True 
+
+            
         print("cd: No such file or directory")
 
     def mkdir(self, dir, p=None): # need to implement perms! 
@@ -128,7 +162,7 @@ class Directory:
             else:
                 for subfolder in folder.subdirs:
                     subfolder.BFS(goal)
-        
+
         return False
 
 
