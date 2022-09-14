@@ -53,6 +53,10 @@ class User:
             workingDir = self.currentDir
 
         filels = dir.split("/")
+        
+        for x in filels:
+            if x == "":
+                filels.remove(x)
 
         for item in filels:
             allocated = False
@@ -88,7 +92,6 @@ class User:
         # should user be able to create a dir called / ?? implement blocks
 
         if p: 
-            # while loop to recursively create nested directories
             pass
 
         else: 
