@@ -42,6 +42,8 @@ class User:
 
     def mkdir(self, dir, p=None): # need to implement perms! 
 
+        # should user be able to create a dir called / ?? implement blocks
+
         if p: 
             # while loop to recursively create nested directories
             pass
@@ -118,6 +120,17 @@ class Directory:
             return self 
         else: 
             return(self.parent.findRoot())
+
+    def BFS(self, goal):
+        for folder in self.subdirs:
+            if folder.name == goal:
+                return True 
+            else:
+                for subfolder in folder.subdirs:
+                    subfolder.BFS(goal)
+        
+        return False
+
 
 
 class File:
