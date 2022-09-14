@@ -23,7 +23,8 @@ class User:
     def cd(self, dir):
 
         if dir == '/':
-            return self.currentDir.findRoot()
+            self.updateCurrentDir(self.currentDir.findRoot()) 
+            return
 
         for item in self.currentDir.subdirs:
             if item.name == dir:
@@ -34,11 +35,9 @@ class User:
             if filetem.name == dir:
                 raise FileExistsError
     
-
-
         print("cd: No such file or directory")
 
-    def mkdir(self, dir, p=None):
+    def mkdir(self, dir, p=None): # need to implement perms! 
 
         if p: 
             # while loop to recursively create nested directories
@@ -102,17 +101,16 @@ class Directory:
         self.perms = {user:"drwxr-x"}
 
     
-    def getPath(self):
+    def getPath(self): # returns absolute path to directory 
         if (self.parent == None):
             return "/"
         elif (self.parent.parent == None):
             return self.parent.getPath() + self.name 
         else: 
-            return self.parent.getPath() + "/{}".format(self.name)
+            return self.parent.getPath() + "/{}".format(self.name)         
 
-            
-
-    def findRoot(self):
+    def findRoot(self): # recursive method to find root directory from whatever the given directory is
+        # print(self.parent)
         if self.parent == None:
             return self 
         else: 
@@ -129,16 +127,18 @@ class File:
 
 def main():
 
-    rootDir = Directory("/", None)
+    # init root directory + root user 
+    rootDir = Directory("/", None) 
     rootUser = User("root", True, rootDir)
 
+    # init curr user variable to root user 
     currUser = rootUser
 
     fnList = {"exit":currUser.exit, "pwd":currUser.pwd, \
         "cd":currUser.cd, "mkdir":currUser.mkdir, \
             "touch":currUser.touch}
 
-    while True:
+    while True: # cmdline interpreter loop 
         lineStart = "{}:{}$ ".format(currUser.name, currUser.currentDir.getPath())
         keyboard = input(lineStart)
 
