@@ -53,8 +53,6 @@ class User:
             workingDir = self.currentDir
 
         filels = dir.split("/")
-        print(filels)
-        print(workingDir.name)
 
         for item in filels:
             if item == ".":
@@ -68,11 +66,12 @@ class User:
 
                 for surs in workingDir.subdirs:
                     if surs.name == item:
-                        workingDir = item
-                        return True 
-
-            
-        print("cd: No such file or directory")
+                        workingDir = surs
+                        
+        if workingDir.name == filels[-1]:
+            self.updateCurrentDir(workingDir)
+        else:
+            print("cd: No such file or directory")
 
     def mkdir(self, dir, p=None): # need to implement perms! 
 
