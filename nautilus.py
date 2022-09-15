@@ -44,12 +44,16 @@ class User:
         else:
             workingDir = self.currentDir
         
+        # preprocessing of path to list + handling split errors
         path_temp = path.split("/") 
         if "" in path_temp:
             path_temp.remove("")
         
-        assert len(path_temp) > 1
-        path.pop()
+        if len(path_temp) < 2:
+            print("Logic error")
+            return 
+
+        obj_of_interest = path.pop()
 
         for item in path_temp: # iterate through path list
 
@@ -57,9 +61,9 @@ class User:
                 if dirs.name == item:
                     workingDir = dirs
                 else:
-                    return False, wd
+                    return False, wd, None
 
-        return True, workingDir
+        return True, workingDir, obj_of_interest
 
     """
     
@@ -88,58 +92,25 @@ class User:
                 self.updateCurrentDir(self.currentDir.parent)
             return 
 
-        elif dir.count("/") == 0 or (dir.count("/") == 1 and dir[0] == "/"):
-            for filetem in self.currentDir.files:
-                if filetem.name == dir.strip("/"):
-                    raise FileExistsError
-            
-            for item in self.currentDir.subdirs:
-                if item.name == dir.strip("/"):
-                    self.updateCurrentDir(item)
-                    return  
-
-            print("cd: No such file or directory")
-            return
-
-        if dir[0] == '/': # absolute path
+        if dir[0] == '/':
             workingDir = self.currentDir.findRoot()
         else:
             workingDir = self.currentDir
 
-        filels = dir.split("/")
-        
-        for x in filels:
-            if x == "":
-                filels.remove(x)
+        pathCheck = self.pathFinder(workingDir, dir) # checks if path TO potential directory is valid 
 
-        for item in filels:
-            allocated = False
-
-            if item == ".":
-                allocated = True
-                pass 
-            elif item == "..":
-                if workingDir.parent != None:
-                    workingDir = workingDir.parent
-                allocated = True 
-            else:
-                for filetem in workingDir.files:
-                    if filetem.name == item:
-                        raise FileExistsError
-
-                for surs in workingDir.subdirs:
-                    if surs.name == item:
-                        workingDir = surs
-                        allocated = True 
-            
-            if allocated:
-                pass 
-            else:
-                print("cd: No such file or directory")
+        if pathCheck[0]:
+            if self.is_a_file(pathCheck[1], pathCheck[2]):
+                print("cd: Destination is a file")
                 return
+            
+            if self.is_a_dir(pathCheck[1], pathCheck[2]):
+                self.updateCurrentDir(workingDir)
+                return
+        
+        else:
+            print("cd: No such destination or file")
 
-        self.updateCurrentDir(workingDir)
-        return
 
     def mkdir(self, dir, p=None): # need to implement perms! 
 
