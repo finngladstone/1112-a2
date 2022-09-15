@@ -89,12 +89,40 @@ class User:
 
     def mkdir(self, dir, p=None): # need to implement perms! 
 
-        # should user be able to create a dir called / ?? implement blocks
+        if p: # parent directory 
+            temppath = dir.split("/")
 
-        if p: 
-            pass
+            for obj in temppath:
+                if obj == "":
+                    temppath.remove(obj)
 
-        else: 
+            if dir[0] == '/':
+                workingdir = self.currentDir.findRoot()
+            else:
+                workingdir = self.currentDir 
+
+            for dirs in temppath: # traverses path given to process
+
+                if dirs == ".":
+                    pass
+                elif dirs == "..":
+                    if workingdir.parent != None:
+                        workingdir = workingdir.parent
+                    pass
+                else: # check if dir is in wd.subdirs
+                    solved = False  
+                    for thisSubdir in workingdir.subdirs:
+                        if thisSubdir.name == dirs:
+                            workingdir = thisSubdir 
+                            solved = True 
+                            break
+                    
+                    if not solved:
+                        newdir = Directory(dirs, workingdir, self)
+                        workingdir.subdirs.append(newdir)
+                        workingdir = newdir
+
+        else: # absolute / relative path with all required dirs 
             self.currentDir.subdirs.append(Directory(dir, self.currentDir, self))
  
 
