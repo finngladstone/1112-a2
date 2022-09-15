@@ -1,6 +1,3 @@
-from tabnanny import check
-
-
 class User:
 
     def __init__(self, name, root=False, currentDir=None) -> None:
@@ -129,56 +126,41 @@ class User:
             self.currentDir.subdirs.append(Directory(dir, self.currentDir, self))
  
 
-    def touch(self, path):
+    def touch(self, name):
 
-        if path[0] == '/':
-            workingDir = self.currentDir.findRoot()
+        # save a pointer to current 
+        # check if name is a path + desired file 
+        # if so;
+        #   coalesce into new path without end 
+        #   cd to path 
+        #   make the file 
+        # end 
+
+        hold_directory = (self.currentDir.getPath())
+
+        if name[0] == '/':
+            self.updateCurrentDir(self.currentDir.findRoot())
         else:
-            workingDir = self.currentDir
-
-        def checkCurrent(name, workingDir):
-
-            for items in workingDir.files: # check for name equality in files
-                if name == items.name:
-                    return False 
-
-            for item in workingDir.subdirs: # check for name equality in subdirs 
-                if name == item.name:
-                    return False
-            
-            return True
-
-
-        temppath = path.split("/") # splits path by / and cleans from split malfunctions
-        for x in temppath:
-            if x == "":
-                temppath.remove(x)
-        
-        if len(temppath) == 1:
-            if checkCurrent(temppath[0], workingDir):
-                workingDir.files.append(File(temppath[0], self))
-        
-        else: # touching using relative path / root path
-            for x in temppath:
-                if x == ".":
-                    pass 
-                elif x == "..":
-                    if workingDir.parent != None:
-                        workingDir = workingDir.parent 
-                else:
-                    for x in 
-
-            
-
-
-            
-
-        if True: # do a perms check here
             pass 
 
-        
+        temp = name.split("/")
 
-        # self.currentDir.files.append(File(name, self))
+        if "" in temp:
+            temp.remove("")
+
+        if len(temp) >= 2:
+            fl = temp.pop()
+            s = ""
+            for i in temp:
+                s += (i + "/")
+            print(s)
+            self.cd(s)
+        
+        else:
+            fl = temp[0]
+
+        self.currentDir.files.append(File(fl, self))
+        self.cd(hold_directory)
 
             
 
@@ -207,7 +189,10 @@ class User:
         pass 
 
     def ls(self, path=None, l=None, d=None, a=None):
-        pass 
+        for i in self.currentDir.files:
+            print(i.name)
+        for y in self.currentDir.subdirs:
+            print("/" + y.name)
 
 
 class Directory:
@@ -266,7 +251,7 @@ def main():
 
     fnList = {"exit":currUser.exit, "pwd":currUser.pwd, \
         "cd":currUser.cd, "mkdir":currUser.mkdir, \
-            "touch":currUser.touch}
+            "touch":currUser.touch, "ls":currUser.ls}
 
     while True: # cmdline interpreter loop 
         lineStart = "{}:{}$ ".format(currUser.name, currUser.currentDir.getPath())
