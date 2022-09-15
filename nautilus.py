@@ -1,4 +1,4 @@
-from tabnanny import check
+from msilib.schema import Directory
 
 
 class User:
@@ -9,12 +9,63 @@ class User:
         self.currentDir = currentDir
         self.perms = {}
 
+    """
+    BACKEND FUNCTIONS
+    """
+
     def updateCurrentDir(self, dir):
 
         if isinstance(dir, Directory):
             self.currentDir = dir
         else:
             print("Directory is wrong file type")
+    
+    def is_a_file(self, wd, name):
+        assert isinstance(wd, Directory)
+
+        for item in wd.files:
+            if item.name == name:
+                return False 
+
+        return True 
+    
+    def is_a_dir(self, wd, name):
+        assert isinstance(wd, Directory)
+
+        for item in wd.subdirs:
+            if item.name == name:
+                return False 
+
+        return True
+
+    def pathFinder(self, wd: Directory, path: str): # checks that the path leading up to the object of interest is valid 
+        if path[0] == '/':
+            workingDir = self.currentDir.findRoot()
+        else:
+            workingDir = self.currentDir
+        
+        path_temp = path.split("/") 
+        if "" in path_temp:
+            path_temp.remove("")
+        
+        assert len(path_temp) > 1
+        path.pop()
+
+        for item in path_temp: # iterate through path list
+
+            for dirs in workingDir.subdirs:
+                if dirs.name == item:
+                    workingDir = dirs
+                else:
+                    return False, wd
+
+        return True, workingDir
+
+    """
+    
+    COMMAND LINE COMMANDS
+    
+    """
         
     def exit(self): # sorted
         print("bye, {}".format(self.name))
@@ -217,7 +268,7 @@ class Directory:
         self.parent = parent 
         self.subdirs = []
         self.files = []
-        self.perms = {user:"drwxr-x"}
+        self.user_perms = {user:"rwx"}
 
     
     def getPath(self): # returns absolute path to directory 
