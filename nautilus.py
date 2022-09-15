@@ -126,7 +126,7 @@ class User:
             self.currentDir.subdirs.append(Directory(dir, self.currentDir, self))
  
 
-    def touch(self, name):
+    def touch(self, name): # seems to be working? further testing needed
 
         # save a pointer to current 
         # check if name is a path + desired file 
@@ -153,7 +153,7 @@ class User:
             s = ""
             for i in temp:
                 s += (i + "/")
-            print(s)
+            # print(s)
             self.cd(s)
         
         else:
