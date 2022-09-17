@@ -45,7 +45,7 @@ class User:
                     return  
 
             print("cd: No such file or directory")
-            return
+            return False
 
         if dir[0] == '/': # absolute path
             workingDir = self.currentDir.findRoot()
@@ -82,7 +82,7 @@ class User:
                 pass 
             else:
                 print("cd: No such file or directory")
-                return
+                return False
 
         self.updateCurrentDir(workingDir)
         return
@@ -123,6 +123,23 @@ class User:
                         workingdir = newdir
 
         else: # absolute / relative path with all required dirs 
+            temppath = dir.split("/")
+            if "/" in temppath:
+                temppath.remove("/")
+            
+            if len(temppath) > 2:
+                s = ""
+                name = temppath.pop()
+                for i in temppath:
+                    s += (i + "/")
+                    if self.cd(s):
+                        self.currentDir.subdirs.append(Directory(name, self.currentDir, self))
+                        pass 
+                    else:
+                        print("mkdir: Ancestory directory does not exist")
+
+            
+
             self.currentDir.subdirs.append(Directory(dir, self.currentDir, self))
  
 
@@ -277,8 +294,8 @@ def main():
 
             except KeyError:
                 print("{}: Command not found".format(cmd)) 
-            except TypeError:
-                print("{}: Invalid syntax".format(cmd))
+            # except TypeError:
+            #     print("{}: Invalid syntax".format(cmd))
             except FileExistsError:
                 print("{}: Destination is a file".format(cmd))
 
