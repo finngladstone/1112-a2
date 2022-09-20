@@ -7,6 +7,15 @@ class IsAFileError(Exception):
 class NoDirectoryError(Exception):
     pass
 
+def pathSplit(dir):
+    pathLs = dir.split("/") # converts path to list object 
+    if "" in pathLs:        # preprocessing for pathParser()
+        pathLs.remove("")
+    
+    return pathLs
+
+
+
 class User:
 
     def __init__(self, name, root=False, currentDir=None) -> None:
@@ -15,7 +24,7 @@ class User:
         self.currentDir = currentDir
         self.perms = {}
 
-    def pathParser(self, dir, workingDir):
+    def pathParser(self, dir, workingDir, p=None):
 
         if isinstance(dir, list):
             pass
@@ -43,6 +52,10 @@ class User:
             
                 if allocated:
                     pass 
+                elif p:
+                    temp = Directory(item, workingDir, self)
+                    workingDir.subdirs.append(temp)
+                    workingDir = temp
                 else:
                     raise AncestorError
 
@@ -84,9 +97,7 @@ class User:
             workingDir = self.currentDir
 
 
-        pathLs = dir.split("/") # converts path to list object 
-        if "" in pathLs:        # preprocessing for pathParser()
-            pathLs.remove("")
+        pathLs = pathSplit(dir)
         
         objectOfInterest = pathLs.pop() # dir we are attempting to reach (at the end of the dir tree)
 
@@ -118,13 +129,6 @@ class User:
         # only executed if other loops fail to return 
         print("cd: No such file or directory")
 
-
-
-
-
-
-        
-
     def mkdir(self, dir, p=None): # need to implement perms! 
 
         if dir[0] == '/':
@@ -138,12 +142,14 @@ class User:
         
         objectOfInterest = pathLs.pop() # dir we are attempting to reach (at the end of the dir tree)
 
-        if p: # missing parent directories will be recursively created!
-            pass 
-
-        else: # p is null - all parent directories need to exist!
-
-            if len(pathLs) > 0:     # if path is in form dir_a/dir_b/dir_c
+        if len(pathLs) > 0:
+            if p:
+                try:
+                    workingDir = self.pathParser(pathLs, workingDir, True) # pathParser command with recursive create
+                except IsAFileError:
+                    print("mkdir: Parent directory already exists as file")
+                    return
+            else:
                 try:
                     workingDir = self.pathParser(pathLs, workingDir)
                 except AncestorError:
@@ -152,60 +158,32 @@ class User:
                 except IsAFileError:
                     print("cd: Ancestory directory missing")
                     return
-
-            # check if desired subdir is a file 
-            for file in workingDir.files:
-                if file.name == objectOfInterest:
-                    print("mkdir: File exists")
-
-                    return
             
-            # check if desired dir already exists
-            for subdir in workingDir.files:
-                if subdir.name == objectOfInterest:
-                    print("mkdir: Directory already exists")
+        # check if desired subdir is a file 
+        for file in workingDir.files:
+            if file.name == objectOfInterest:
+                print("mkdir: File exists")
 
-                    return
+                return
+        
+        # check if desired dir already exists
+        for subdir in workingDir.files:
+            if subdir.name == objectOfInterest:
+                print("mkdir: Directory already exists")
 
-            workingDir.subdirs.append(Directory(objectOfInterest, workingDir, self))
-            return
+                return
+
+        workingDir.subdirs.append(Directory(objectOfInterest, workingDir, self))
+        return
+
+            
  
 
-    def touch(self, name): # seems to be working? further testing needed
+    def touch(self, name): 
+        pass
 
-        # save a pointer to current 
-        # check if name is a path + desired file 
-        # if so;
-        #   coalesce into new path without end 
-        #   cd to path 
-        #   make the file 
-        # end 
 
-        hold_directory = (self.currentDir.getPath())
-
-        if name[0] == '/':
-            self.updateCurrentDir(self.currentDir.findRoot())
-        else:
-            pass 
-
-        temp = name.split("/")
-
-        if "" in temp:
-            temp.remove("")
-
-        if len(temp) >= 2:
-            fl = temp.pop()
-            s = ""
-            for i in temp:
-                s += (i + "/")
-            # print(s)
-            self.cd(s)
-        
-        else:
-            fl = temp[0]
-
-        self.currentDir.files.append(File(fl, self))
-        self.cd(hold_directory)
+       
 
             
 
