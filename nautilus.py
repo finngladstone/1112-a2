@@ -1,3 +1,12 @@
+class AncestorError(Exception):
+    pass
+
+class IsAFileError(Exception):
+    pass 
+
+class NoDirectoryError(Exception):
+    pass
+
 class User:
 
     def __init__(self, name, root=False, currentDir=None) -> None:
@@ -5,6 +14,71 @@ class User:
         self.root = root
         self.currentDir = currentDir
         self.perms = {}
+
+    def pathParser(self, dir[]):
+
+        if dir == '/': # checks if user just wants to go to root 
+            self.updateCurrentDir(self.currentDir.findRoot()) 
+            return
+
+        elif dir == '.': # checks if user is just trolling
+            return
+
+        elif dir == '..': # checks if user is going to parent dir
+            if self.currentDir.parent != None:
+                self.updateCurrentDir(self.currentDir.parent)
+            return 
+
+        elif dir.count("/") == 0 or (dir.count("/") == 1 and dir[0] == "/"): # check this?
+            for filetem in self.currentDir.files:
+                if filetem.name == dir.strip("/"):
+                    raise IsAFileError
+            
+            for item in self.currentDir.subdirs:
+                if item.name == dir.strip("/"):
+                    self.updateCurrentDir(item)
+                    return  
+
+            print("cd: No such file or directory")
+            return
+
+        if dir[0] == '/': # absolute path: switch wd to root
+            workingDir = self.currentDir.findRoot()
+        else: # relative path: dont leave current dir
+            workingDir = self.currentDir 
+
+        filels = dir.split("/")
+        
+        for x in filels: # creates a list object which lays out the path the program needs to follow
+            if x == "":
+                filels.remove(x)
+
+        for item in filels:
+
+            if item == ".":
+                pass 
+            elif item == "..":
+                if workingDir.parent != None:
+                    workingDir = workingDir.parent
+            else:
+                allocated = False
+                for filetem in workingDir.files:
+                    if filetem.name == item:
+                        raise IsAFileError
+
+                for surs in workingDir.subdirs:
+                    if surs.name == item:
+                        workingDir = surs
+                        allocated = True 
+            
+                if allocated:
+                    pass 
+                else:
+                    raise AncestorError
+
+        self.updateCurrentDir(workingDir)
+        return
+
 
     def updateCurrentDir(self, dir):
 
@@ -21,71 +95,64 @@ class User:
         print(self.currentDir.getPath())
 
     def cd(self, dir):
-
-        if dir == '/':
-            self.updateCurrentDir(self.currentDir.findRoot()) 
-            return
-
-        elif dir == '.':
-            return
-
-        elif dir == '..':
-            if self.currentDir.parent != None:
-                self.updateCurrentDir(self.currentDir.parent)
+        
+        if (dir == '/'): # user wants to navigate to root 
+            self.updateCurrentDir(self.currentDir.findRoot())
+            return 
+        
+        elif (dir == '.'): # user navigates to current dir bruh
             return 
 
-        elif dir.count("/") == 0 or (dir.count("/") == 1 and dir[0] == "/"):
-            for filetem in self.currentDir.files:
-                if filetem.name == dir.strip("/"):
-                    raise FileExistsError
-            
-            for item in self.currentDir.subdirs:
-                if item.name == dir.strip("/"):
-                    self.updateCurrentDir(item)
-                    return  
+        elif (dir == '..'):
+            if (self.currentDir.parent != None):
+                self.updateCurrentDir(self.currentDir.parent)
 
-            print("cd: No such file or directory")
-            return
-
-        if dir[0] == '/': # absolute path
+            return 
+        
+        if dir[0] == '/': # sets working directory variable 
             workingDir = self.currentDir.findRoot()
-        else:
+        else:            # allows us to investigate directory structure without actually changing currentDir 
             workingDir = self.currentDir
 
-        filels = dir.split("/")
+
+        pathLs = dir.split("/") # converts path to list object 
+        if "" in pathLs:        # preprocessing for pathParser()
+            pathLs.remove("")
         
-        for x in filels:
-            if x == "":
-                filels.remove(x)
+        objectOfInterest = pathLs.pop() # dir we are attempting to reach (at the end of the dir tree)
 
-        for item in filels:
-            allocated = False
+        if len(pathLs) > 0:     # if path is in form dir_a/dir_b/dir_c
+            try:
+                workingDir = pathParser(pathLs, workingDir)
+            except AncestorError:
+                print("cd: Ancestor directory missing")
+            except IsAFileError:
+                print("cd: Ancestory directory missing")
 
-            if item == ".":
-                allocated = True
-                pass 
-            elif item == "..":
-                if workingDir.parent != None:
-                    workingDir = workingDir.parent
-                allocated = True 
-            else:
-                for filetem in workingDir.files:
-                    if filetem.name == item:
-                        raise FileExistsError
+        # now pathParser has updated the working directory to that which 
+        # the target directory (objectOfInterest) should be within 
+        
+        for file in workingDir.files: 
+            if file.name == objectOfInterest:
+                print("cd: Destination is a file")
 
-                for surs in workingDir.subdirs:
-                    if surs.name == item:
-                        workingDir = surs
-                        allocated = True 
-            
-            if allocated:
-                pass 
-            else:
-                print("cd: No such file or directory")
-                return
+                return 
+        
+        for subdir in workingDir.subdirs:
+            if subdir.name == objectOfInterest:
+                self.updateCurrentDir(subdir)
 
-        self.updateCurrentDir(workingDir)
-        return
+                return 
+        
+        # only executed if other loops fail to return 
+        print("cd: No such file or directory")
+
+
+
+
+
+
+        
 
     def mkdir(self, dir, p=None): # need to implement perms! 
 
@@ -279,7 +346,7 @@ def main():
                 print("{}: Command not found".format(cmd)) 
             except TypeError:
                 print("{}: Invalid syntax".format(cmd))
-            except FileExistsError:
+            except IsAFileError:
                 print("{}: Destination is a file".format(cmd))
 
 if __name__ == '__main__':
