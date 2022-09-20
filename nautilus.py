@@ -95,8 +95,10 @@ class User:
                 workingDir = self.pathParser(pathLs, workingDir)
             except AncestorError:
                 print("cd: Ancestor directory missing")
+                return
             except IsAFileError:
                 print("cd: Ancestory directory missing")
+                return
 
         # now pathParser has updated the working directory to that which 
         # the target directory (objectOfInterest) should be within 
