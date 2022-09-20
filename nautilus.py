@@ -111,6 +111,15 @@ class User:
 
         # now pathParser has updated the working directory to that which 
         # the target directory (objectOfInterest) should be within 
+
+        if objectOfInterest == '.':
+            return 
+        
+        if objectOfInterest == '..':
+            if workingDir.parent != None:
+                self.updateCurrentDir(workingDir.parent)
+                return 
+
         
         for file in workingDir.files: 
             if file.name == objectOfInterest:
@@ -149,10 +158,10 @@ class User:
                 try:
                     workingDir = self.pathParser(pathLs, workingDir)
                 except AncestorError:
-                    print("cd: Ancestor directory missing")
+                    print("mkdir: Ancestor directory does not exist")
                     return
                 except IsAFileError:
-                    print("cd: Ancestory directory missing")
+                    print("mkdir: Ancestor directory does not exist")
                     return
             
         # check if desired subdir is a file 
@@ -190,10 +199,10 @@ class User:
             try:
                 workingDir = self.pathParser(pathLs, workingDir)
             except AncestorError:
-                print("cd: Ancestor directory missing")
+                print("touch: Ancestor directory does not exist")
                 return
             except IsAFileError:
-                print("cd: Ancestory directory missing")
+                print("touch: Ancestor directory does not exist")
                 return
 
         for file in workingDir.files: # if file already exists with same name
@@ -269,7 +278,7 @@ class User:
                 return
 
         for file in destination_working_dir.files:
-            if dir.name == destination_file:
+            if file.name == destination_file:
                 print("cp: File exists")
                 return 
 
