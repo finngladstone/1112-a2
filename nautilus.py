@@ -127,41 +127,91 @@ class User:
 
     def mkdir(self, dir, p=None): # need to implement perms! 
 
-        if p: # parent directory 
-            temppath = dir.split("/")
+        if dir[0] == '/':
+            workingDir = self.currentDir.findRoot()
+        else:
+            workingDir = self.currentDir
 
-            for obj in temppath:
-                if obj == "":
-                    temppath.remove(obj)
+        pathLs = dir.split("/") # converts path to list object 
+        if "" in pathLs:        # preprocessing for pathParser()
+            pathLs.remove("")
+        
+        objectOfInterest = pathLs.pop() # dir we are attempting to reach (at the end of the dir tree)
 
-            if dir[0] == '/':
-                workingdir = self.currentDir.findRoot()
-            else:
-                workingdir = self.currentDir 
+        if p: # missing parent directories will be recursively created!
+            pass 
 
-            for dirs in temppath: # traverses path given to process
+        else: # p is null - all parent directories need to exist!
 
-                if dirs == ".":
-                    pass
-                elif dirs == "..":
-                    if workingdir.parent != None:
-                        workingdir = workingdir.parent
-                    pass
-                else: # check if dir is in wd.subdirs
-                    solved = False  
-                    for thisSubdir in workingdir.subdirs:
-                        if thisSubdir.name == dirs:
-                            workingdir = thisSubdir 
-                            solved = True 
-                            break
+            if len(pathLs) > 0:     # if path is in form dir_a/dir_b/dir_c
+                try:
+                    workingDir = self.pathParser(pathLs, workingDir)
+                except AncestorError:
+                    print("cd: Ancestor directory missing")
+                    return
+                except IsAFileError:
+                    print("cd: Ancestory directory missing")
+                    return
+
+            # check if desired subdir is a file 
+            for file in workingDir.files:
+                if file.name == objectOfInterest:
+                    print("mkdir: File exists")
+
+                    return
+            
+            # check if desired dir already exists
+            for subdir in workingDir.files:
+                if subdir.name == objectOfInterest:
+                    print("mkdir: Directory already exists")
+
+                    return
+
+            workingDir.subdirs.append(Directory(objectOfInterest, workingDir, self))
+            return
+
+            
+
+
+
+
+        
+
+        # if p: # parent directory 
+        #     temppath = dir.split("/")
+
+        #     for obj in temppath:
+        #         if obj == "":
+        #             temppath.remove(obj)
+
+        #     if dir[0] == '/':
+        #         workingdir = self.currentDir.findRoot()
+        #     else:
+        #         workingdir = self.currentDir 
+
+        #     for dirs in temppath: # traverses path given to process
+
+        #         if dirs == ".":
+        #             pass
+        #         elif dirs == "..":
+        #             if workingdir.parent != None:
+        #                 workingdir = workingdir.parent
+        #             pass
+        #         else: # check if dir is in wd.subdirs
+        #             solved = False  
+        #             for thisSubdir in workingdir.subdirs:
+        #                 if thisSubdir.name == dirs:
+        #                     workingdir = thisSubdir 
+        #                     solved = True 
+        #                     break
                     
-                    if not solved:
-                        newdir = Directory(dirs, workingdir, self)
-                        workingdir.subdirs.append(newdir)
-                        workingdir = newdir
+        #             if not solved:
+        #                 newdir = Directory(dirs, workingdir, self)
+        #                 workingdir.subdirs.append(newdir)
+        #                 workingdir = newdir
 
-        else: # absolute / relative path with all required dirs 
-            self.currentDir.subdirs.append(Directory(dir, self.currentDir, self))
+        # else: # absolute / relative path with all required dirs 
+        #     self.currentDir.subdirs.append(Directory(dir, self.currentDir, self))
  
 
     def touch(self, name): # seems to be working? further testing needed
