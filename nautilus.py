@@ -14,8 +14,6 @@ def pathSplit(dir):
     
     return pathLs
 
-
-
 class User:
 
     def __init__(self, name, root=False, currentDir=None) -> None:
@@ -177,15 +175,100 @@ class User:
             
  
 
-    def touch(self, name): 
-        pass
+    def touch(self, dir): 
 
+        if dir[0] == '/': # is path relative or absolute
+            workingDir = self.currentDir.findRoot()
+        else:
+            workingDir = self.currentDir
 
-       
+        pathLs = pathSplit(dir) # path preprocessing
+        
+        objectOfInterest = pathLs.pop() # dir we are attempting to reach (at the end of the dir tree)
 
-            
+        if len(pathLs) > 0:     # attempt to navigate to directory in which the fill will exist
+            try:
+                workingDir = self.pathParser(pathLs, workingDir)
+            except AncestorError:
+                print("cd: Ancestor directory missing")
+                return
+            except IsAFileError:
+                print("cd: Ancestory directory missing")
+                return
+
+        for file in workingDir.files: # if file already exists with same name
+            if file.name == objectOfInterest:
+                return 
+        
+        for subdir in workingDir.files: # if subdir already exists with same name
+            if subdir.name == objectOfInterest:
+                return 
+
+        workingDir.files.append(File(objectOfInterest, self))
+
 
     def cp(self, source, destination):
+
+        if source[0] == '/': # set directory absolute / relative
+            source_working_dir = self.currentDir.findRoot()
+        else:
+            source_working_dir = self.currentDir
+        
+        if destination[0] == '/':
+            destination_working_dir = self.currentDir.findRoot()
+        else:
+            destination_working_dir = self.currentDir
+
+        source_path = pathSplit(source_working_dir)
+        destination_path = pathSplit(destination_working_dir)
+
+        source_file = source_path.pop()
+        destination_file = destination_path.pop()
+
+        if len(source_path) > 0:
+            try:
+                source_working_dir = self.pathParser(source_path, source_working_dir)
+            except AncestorError:
+                print("cp: Ancestor directory missing")
+                return
+            except IsAFileError:
+                print("cp: Ancestory directory missing")
+                return
+
+        if len(destination_path) > 0:
+            try:
+                destination_working_dir = self.pathParser(destination_path, destination_working_dir)
+            except AncestorError:
+                print("cp: Ancestor directory missing")
+                return
+            except IsAFileError:
+                print("cp: Ancestory directory missing")
+                return
+
+            """ Checking if source file and destination position are valid / not taken """
+    
+        for dir in source_working_dir.subdirs: 
+            if dir.name == source_file:
+                print("cp: Source is a directory")
+                return 
+
+        found = False 
+        for file in source_working_dir.files:
+            if file.name == source_file:
+                found = True 
+
+        if not (found):
+            print("cp: No such file")
+            return 
+
+        
+        
+        
+
+
+
+                
+
         pass 
 
     def mv(self, source, destination):
