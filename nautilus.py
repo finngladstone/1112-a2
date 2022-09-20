@@ -2,7 +2,7 @@ class AncestorError(Exception):
     pass
 
 class IsAFileError(Exception):
-    pass 
+    pass
 
 class NoDirectoryError(Exception):
     pass
@@ -136,9 +136,7 @@ class User:
         else:
             workingDir = self.currentDir
 
-        pathLs = dir.split("/") # converts path to list object 
-        if "" in pathLs:        # preprocessing for pathParser()
-            pathLs.remove("")
+        pathLs = pathSplit(dir)
         
         objectOfInterest = pathLs.pop() # dir we are attempting to reach (at the end of the dir tree)
 
