@@ -15,45 +15,15 @@ class User:
         self.currentDir = currentDir
         self.perms = {}
 
-    def pathParser(self, dir[]):
+    def pathParser(self, dir, workingDir):
 
-        if dir == '/': # checks if user just wants to go to root 
-            self.updateCurrentDir(self.currentDir.findRoot()) 
-            return
-
-        elif dir == '.': # checks if user is just trolling
-            return
-
-        elif dir == '..': # checks if user is going to parent dir
-            if self.currentDir.parent != None:
-                self.updateCurrentDir(self.currentDir.parent)
+        if isinstance(dir, list):
+            pass
+        else:
+            print("cd list broken")
             return 
 
-        elif dir.count("/") == 0 or (dir.count("/") == 1 and dir[0] == "/"): # check this?
-            for filetem in self.currentDir.files:
-                if filetem.name == dir.strip("/"):
-                    raise IsAFileError
-            
-            for item in self.currentDir.subdirs:
-                if item.name == dir.strip("/"):
-                    self.updateCurrentDir(item)
-                    return  
-
-            print("cd: No such file or directory")
-            return
-
-        if dir[0] == '/': # absolute path: switch wd to root
-            workingDir = self.currentDir.findRoot()
-        else: # relative path: dont leave current dir
-            workingDir = self.currentDir 
-
-        filels = dir.split("/")
-        
-        for x in filels: # creates a list object which lays out the path the program needs to follow
-            if x == "":
-                filels.remove(x)
-
-        for item in filels:
+        for item in dir: # iterates through dir object; e.g. [dir1, dir2, dir3]
 
             if item == ".":
                 pass 
@@ -76,8 +46,7 @@ class User:
                 else:
                     raise AncestorError
 
-        self.updateCurrentDir(workingDir)
-        return
+        return workingDir
 
 
     def updateCurrentDir(self, dir):
@@ -123,7 +92,7 @@ class User:
 
         if len(pathLs) > 0:     # if path is in form dir_a/dir_b/dir_c
             try:
-                workingDir = pathParser(pathLs, workingDir)
+                workingDir = self.pathParser(pathLs, workingDir)
             except AncestorError:
                 print("cd: Ancestor directory missing")
             except IsAFileError:
