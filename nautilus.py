@@ -263,17 +263,6 @@ class User:
             if file.name == destination_file:
                 print("cp: File exists")
                 return
-        
-        # <2> Checks that source exists
-
-        found = False 
-        for file in source_working_dir.files:
-            if file.name == source_file:
-                found = True 
-
-        if not (found):
-            print("cp: No such file")
-            return 
 
         # <3> Checks that destination is is not a directory 
 
@@ -287,6 +276,17 @@ class User:
             if dir.name == source_file:
                 print("cp: Source is a directory")
                 return 
+
+        # <2> Checks that source exists
+
+        found = False 
+        for file in source_working_dir.files:
+            if file.name == source_file:
+                found = True 
+
+        if not (found):
+            print("cp: No such file")
+            return 
 
         # <5> is covered within pathParser loop
 
