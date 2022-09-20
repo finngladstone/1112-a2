@@ -258,13 +258,14 @@ class User:
 
             """ Checking if source file and destination position are valid / not taken """
     
-        # checks that source doesnt point to a subdir
-        for dir in source_working_dir.subdirs: 
-            if dir.name == source_file:
-                print("cp: Source is a directory")
-                return 
+        # <1> Checks that destination file doesnt already exist
+        for file in destination_working_dir.files:
+            if file.name == destination_file:
+                print("cp: File exists")
+                return
+        
+        # <2> Checks that source exists
 
-        # checks that source file actually exists
         found = False 
         for file in source_working_dir.files:
             if file.name == source_file:
@@ -274,15 +275,20 @@ class User:
             print("cp: No such file")
             return 
 
+        # <3> Checks that destination is is not a directory 
+
         for dir in destination_working_dir.subdirs:
             if dir.name == destination_file:
                 print("cp: Destination is a directory")
                 return
 
-        for file in destination_working_dir.files:
-            if file.name == destination_file:
-                print("cp: File exists")
+        # <4> Checks that soruce does not refer to a directory 
+        for dir in source_working_dir.subdirs: 
+            if dir.name == source_file:
+                print("cp: Source is a directory")
                 return 
+
+        # <5> is covered within pathParser loop
 
         destination_working_dir.files.append(File(destination_file, self))     
 
