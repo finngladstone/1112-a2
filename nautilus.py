@@ -118,7 +118,7 @@ class User:
         if objectOfInterest == '..':
             if workingDir.parent != None:
                 self.updateCurrentDir(workingDir.parent)
-                return 
+            return 
 
         
         for file in workingDir.files: 
