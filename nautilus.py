@@ -167,14 +167,16 @@ class User:
         # check if desired subdir is a file 
         for file in workingDir.files:
             if file.name == objectOfInterest:
-                print("mkdir: File exists")
+                if not p:
+                    print("mkdir: File exists")
 
                 return
         
         # check if desired dir already exists
-        for subdir in workingDir.files:
+        for subdir in workingDir.subdirs:
             if subdir.name == objectOfInterest:
-                print("mkdir: Directory already exists")
+                if not p:
+                    print("mkdir: File exists")
 
                 return
 
