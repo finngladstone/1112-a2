@@ -207,7 +207,7 @@ class User:
         workingDir.files.append(File(objectOfInterest, self))
 
 
-    def cp(self, source, destination):
+    def cp(self, destination, source): # have to flip input due to cmdline flipper to accomodate optional args
 
         if source[0] == '/': # set directory absolute / relative
             source_working_dir = self.currentDir.findRoot()
@@ -219,13 +219,13 @@ class User:
         else:
             destination_working_dir = self.currentDir
 
-        source_path = pathSplit(source_working_dir)
-        destination_path = pathSplit(destination_working_dir)
+        source_path = pathSplit(source)
+        destination_path = pathSplit(destination)
 
         source_file = source_path.pop()
         destination_file = destination_path.pop()
 
-        if len(source_path) > 0:
+        if len(source_path) > 0: # check the error messages here
             try:
                 source_working_dir = self.pathParser(source_path, source_working_dir)
             except AncestorError:
@@ -239,19 +239,21 @@ class User:
             try:
                 destination_working_dir = self.pathParser(destination_path, destination_working_dir)
             except AncestorError:
-                print("cp: Ancestor directory missing")
+                print("cp: No such file or directory")
                 return
             except IsAFileError:
-                print("cp: Ancestory directory missing")
+                print("cp: No such file or directory")
                 return
 
             """ Checking if source file and destination position are valid / not taken """
     
+        # checks that source doesnt point to a subdir
         for dir in source_working_dir.subdirs: 
             if dir.name == source_file:
                 print("cp: Source is a directory")
                 return 
 
+        # checks that source file actually exists
         found = False 
         for file in source_working_dir.files:
             if file.name == source_file:
@@ -261,15 +263,17 @@ class User:
             print("cp: No such file")
             return 
 
-        
-        
-        
+        for dir in destination_working_dir.subdirs:
+            if dir.name == destination_file:
+                print("cp: Destination is a directory")
+                return
 
+        for file in destination_working_dir.files:
+            if dir.name == destination_file:
+                print("cp: File exists")
+                return 
 
-
-                
-
-        pass 
+        destination_working_dir.files.append(File(destination_file, self))     
 
     def mv(self, source, destination):
         pass 
@@ -355,7 +359,7 @@ def main():
 
     fnList = {"exit":currUser.exit, "pwd":currUser.pwd, \
         "cd":currUser.cd, "mkdir":currUser.mkdir, \
-            "touch":currUser.touch, "ls":currUser.ls}
+            "touch":currUser.touch, "ls":currUser.ls, "cp": currUser.cp}
 
     while True: # cmdline interpreter loop 
         lineStart = "{}:{}$ ".format(currUser.name, currUser.currentDir.getPath())
