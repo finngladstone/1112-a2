@@ -384,7 +384,8 @@ def main():
 
         keyboard = keyboard.split()
 
-        cmd = keyboard[0] # fn name 
+        if (len(keyboard) != 0):
+            cmd = keyboard[0] 
 
         if len(keyboard) == 1:
             try:
@@ -394,7 +395,7 @@ def main():
             except TypeError:
                 print("{}: Invalid syntax".format(cmd))
             
-        else:
+        elif len(keyboard) > 1:
             args = keyboard[-1:0:-1] # reverses args to allow for optional args 
 
             try:
