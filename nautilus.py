@@ -40,14 +40,18 @@ class User:
     
 class Directory:
 
-    def __init__(self, name, parent, user=None) -> None:
+    def __init__(self, name, parent, user: User) -> None:
         self.name = name 
         self.parent = parent 
+
         self.subdirs = []
         self.files = []
-        self.perms = {user:"drwxr-x"}
+        
+        self.owner = user
+        self.owner_perms = "rwx"
+        self.other_perms = "r-x"
+        
 
-    
     def getPath(self): # returns absolute path to directory 
         if (self.parent == None):
             return "/"
@@ -56,29 +60,23 @@ class Directory:
         else: 
             return self.parent.getPath() + "/{}".format(self.name)         
 
-    def findRoot(self): # recursive method to find root directory from whatever the given directory is
-        # print(self.parent)
-        if self.parent == None:
-            return self 
-        else: 
-            return(self.parent.findRoot())
+    def get_user_perms(self, user):
+        if user == self.owner:
+            return self.owner_perms
+        else:
+            return self.other_perms
 
-    def BFS(self, goal):
-        for folder in self.subdirs:
-            if folder.name == goal:
-                return True 
-            else:
-                for subfolder in folder.subdirs:
-                    subfolder.BFS(goal)
-
-        return False
+    def output_perms(self):
+        s = "d" + self.owner_perms + self.other_perms
+        return s
 
 class File:
 
     def __init__(self, name, user) -> None:
         self.name = name 
+        self.owner = user
         self.perms = {user : "-rw-r--"} # dictionary to store user perms 
-    pass 
+    
 
 class Namespace: # backend puppetmaster class - allows user management
 
@@ -119,7 +117,21 @@ class Namespace: # backend puppetmaster class - allows user management
         else:
             return self.currentUser.currentDir
 
-    def pathParser(self, dir, workingDir, p=None):
+    def is_a_file(self, obj, workingDir): 
+        for file in workingDir.files:
+            if file.name == obj:
+                return True 
+        
+        return False 
+
+    def is_a_subdir(self, obj, workingDir):
+        for subdir in workingDir.subdirs:
+            if subdir.name == obj:
+                return True 
+
+        return False 
+
+    def pathParser(self, dir, workingDir, p=None, r=None):
 
         if isinstance(dir, list):
             pass
@@ -148,7 +160,7 @@ class Namespace: # backend puppetmaster class - allows user management
                 if allocated:
                     pass 
                 elif p:
-                    temp = Directory(item, workingDir, self)
+                    temp = Directory(item, workingDir, self.currentUser)
                     workingDir.subdirs.append(temp)
                     workingDir = temp
                 else:
@@ -527,6 +539,31 @@ class Namespace: # backend puppetmaster class - allows user management
 
     def chmod(self, path, perms, r=None):
 
+        workingDir = self.get_working_dir(path)
+        pathLs = pathSplit(path)
+
+        obj_of_interest = pathLs.pop()  
+
+        if len(pathLs) > 0:
+            try:
+                workingDir = self.pathParser(pathLs, workingDir)
+            except AncestorError:
+                print("chmod: No such file or directory")
+                return
+            except IsAFileError:
+                print("chmod: No such file or directory")
+                return 
+
+        # find file / subdir method 
+
+        
+
+
+
+
+
+
+
         
         
         pass 
@@ -604,7 +641,7 @@ def main():
 
     namespace = Namespace()
 
-    namespace.setRootDir(Directory("/", None))
+    namespace.setRootDir(Directory("/", None, None))
     namespace.addUser(User("root", True, namespace.rootDir))
     namespace.setRootUser(namespace.userLs[0])
     
