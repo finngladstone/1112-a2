@@ -427,8 +427,20 @@ class User:
 
         if dir_to_delete == '.':
             print("rmdir: Cannot remove pwd")
+            return 
+        elif dir_to_delete == '/':
+            if workingDir.parent == None: # currentdir in root
+                print("rmdir: Cannot remove pwd")
+            else:
+                print("rmdir: Directory not empty")
+            return
+
         elif dir_to_delete == '..':
-            print("Attempted to remove parent")
+            if workingDir.parent == None:
+                print("rmdir: Cannot remove pwd")
+            else:
+                print("rmdir: Directory not empty")
+            return  
 
         for file in workingDir.files:
             if file.name == dir_to_delete:
