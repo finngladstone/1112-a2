@@ -443,6 +443,9 @@ class User:
                 else:
                     print("rmdir: Directory not empty")
                     return 
+            
+        # no other logic activated clause 
+        print("rmdir: No such file or directory")
 
 
     def chmod(self, path, perms, r=None):
