@@ -585,8 +585,29 @@ class Namespace: # backend puppetmaster class - allows user management
 
             
 
-    def su(self, user):
-        pass 
+    def su(self, user=None):
+
+        wd = self.currentUser.currentDir
+
+        if user == None:
+            self.currentUser = self.rootUser
+            self.currentUser.updateCurrentDir(wd)
+            return 
+        
+        if user == "root":
+            self.currentUser = self.rootUser
+            self.currentUser.updateCurrentDir(wd)
+            return 
+
+        else:
+            for usr in self.userLs:
+                if usr.name == user:
+                    self.currentUser = usr 
+                    self.currentUser.updateCurrentDir(wd)
+                    return 
+
+        print("su: Invalid user")
+        return 
 
     def ls(self, path=None, l=None, d=None, a=None):
         for i in self.currentUser.currentDir.files:
