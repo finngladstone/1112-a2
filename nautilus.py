@@ -421,8 +421,6 @@ class User:
         pathLs = pathSplit(path)
         dir_to_delete = pathLs.pop()
 
-        print(dir_to_delete)
-
         if len(pathLs) > 0:
             try:
                 workingDir = self.pathParser(pathLs, workingDir)
