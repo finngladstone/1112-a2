@@ -1,6 +1,3 @@
-from tokenize import Name
-
-
 class AncestorError(Exception):
     pass
 
@@ -24,6 +21,85 @@ class User:
         self.root = root
         self.currentDir = currentDir
         self.perms = {}
+
+    
+
+
+    def updateCurrentDir(self, dir):
+
+        if isinstance(dir, Directory):
+            self.currentDir = dir
+        else:
+            print("Directory is wrong file type")
+        
+    
+
+
+class Directory:
+
+    def __init__(self, name, parent, user=None) -> None:
+        self.name = name 
+        self.parent = parent 
+        self.subdirs = []
+        self.files = []
+        self.perms = {user:"drwxr-x"}
+
+    
+    def getPath(self): # returns absolute path to directory 
+        if (self.parent == None):
+            return "/"
+        elif (self.parent.parent == None):
+            return self.parent.getPath() + self.name 
+        else: 
+            return self.parent.getPath() + "/{}".format(self.name)         
+
+    def findRoot(self): # recursive method to find root directory from whatever the given directory is
+        # print(self.parent)
+        if self.parent == None:
+            return self 
+        else: 
+            return(self.parent.findRoot())
+
+    def BFS(self, goal):
+        for folder in self.subdirs:
+            if folder.name == goal:
+                return True 
+            else:
+                for subfolder in folder.subdirs:
+                    subfolder.BFS(goal)
+
+        return False
+
+class File:
+
+    def __init__(self, name, user) -> None:
+        self.name = name 
+        self.perms = {user : "-rw-r--"} # dictionary to store user perms 
+    pass 
+
+class Namespace: # backend puppetmaster class - allows user management
+
+    def __init__(self) -> None:
+        
+        self.rootDir = None 
+        self.rootUser = None 
+        self.currentUser = None 
+
+        self.otherUsers = []
+        # perms-map?
+
+    """ ATTRIBUTES + ABSTRACT COMMANDS"""
+
+    def setRootDir(self, dir: Directory):
+        assert (dir.parent == None)
+        self.rootDir = dir 
+
+    def setRootUser(self, usr: User):
+        assert (usr.root == True)
+        self.rootUser = usr
+        
+    def setCurrentUser(self, usr: User):
+        self.currentUser = usr 
 
     def pathParser(self, dir, workingDir, p=None):
 
@@ -62,40 +138,34 @@ class User:
 
         return workingDir
 
+    """ BASH COMMANDS """
 
-    def updateCurrentDir(self, dir):
-
-        if isinstance(dir, Directory):
-            self.currentDir = dir
-        else:
-            print("Directory is wrong file type")
-        
     def exit(self): # sorted
-        print("bye, {}".format(self.name))
+        print("bye, {}".format(self.currentUser.name))
         exit(0)
 
     def pwd(self): # sorted? depends on currentDir val which needs addressing
-        print(self.currentDir.getPath())
+        print(self.currentUser.currentDir.getPath())
 
     def cd(self, dir):
         
         if (dir == '/'): # user wants to navigate to root 
-            self.updateCurrentDir(self.currentDir.findRoot())
+            self.currentUser.updateCurrentDir(self.currentUser.currentDir.findRoot())
             return 
         
         elif (dir == '.'): # user navigates to current dir bruh
             return 
 
         elif (dir == '..'):
-            if (self.currentDir.parent != None):
-                self.updateCurrentDir(self.currentDir.parent)
+            if (self.currentUser.currentDir.parent != None):
+                self.currentUser.updateCurrentDir(self.currentUser.currentDir.parent)
 
             return 
         
-        if dir[0] == '/': # sets working directory variable 
-            workingDir = self.currentDir.findRoot()
+        if dir[0] == '/': # sets working directory variable depending on if abs/rel path
+            workingDir = self.rootDir
         else:            # allows us to investigate directory structure without actually changing currentDir 
-            workingDir = self.currentDir
+            workingDir = self.currentUser.currentDir
 
 
         pathLs = pathSplit(dir)
@@ -120,7 +190,7 @@ class User:
         
         if objectOfInterest == '..':
             if workingDir.parent != None:
-                self.updateCurrentDir(workingDir.parent)
+                self.currentUser.updateCurrentDir(workingDir.parent)
             return 
 
         
@@ -132,7 +202,7 @@ class User:
         
         for subdir in workingDir.subdirs:
             if subdir.name == objectOfInterest:
-                self.updateCurrentDir(subdir)
+                self.currentUser.updateCurrentDir(subdir)
 
                 return 
         
@@ -142,9 +212,9 @@ class User:
     def mkdir(self, dir, p=None): # need to implement perms! 
 
         if dir[0] == '/':
-            workingDir = self.currentDir.findRoot()
+            workingDir = self.rootDir
         else:
-            workingDir = self.currentDir
+            workingDir = self.currentUser.currentDir
 
         pathLs = pathSplit(dir)
         
@@ -183,7 +253,7 @@ class User:
 
                 return
 
-        workingDir.subdirs.append(Directory(objectOfInterest, workingDir, self))
+        workingDir.subdirs.append(Directory(objectOfInterest, workingDir, self.currentUser))
         return
 
             
@@ -192,9 +262,9 @@ class User:
     def touch(self, dir): 
 
         if dir[0] == '/': # is path relative or absolute
-            workingDir = self.currentDir.findRoot()
+            workingDir = self.rootDir
         else:
-            workingDir = self.currentDir
+            workingDir = self.currentUser.currentDir
 
         pathLs = pathSplit(dir) # path preprocessing
         
@@ -218,20 +288,20 @@ class User:
             if subdir.name == objectOfInterest:
                 return 
 
-        workingDir.files.append(File(objectOfInterest, self))
+        workingDir.files.append(File(objectOfInterest, self.currentUser))
 
 
     def cp(self, destination, source): # have to flip input due to cmdline flipper to accomodate optional args
 
         if source[0] == '/': # set directory absolute / relative
-            source_working_dir = self.currentDir.findRoot()
+            source_working_dir = self.rootDir
         else:
-            source_working_dir = self.currentDir
+            source_working_dir = self.currentUser.currentDir
         
         if destination[0] == '/':
-            destination_working_dir = self.currentDir.findRoot()
+            destination_working_dir = self.rootDir
         else:
-            destination_working_dir = self.currentDir
+            destination_working_dir = self.currentUser.currentDir
 
         source_path = pathSplit(source)
         destination_path = pathSplit(destination)
@@ -293,19 +363,19 @@ class User:
 
         # <5> is covered within pathParser loop
 
-        destination_working_dir.files.append(File(destination_file, self))     
+        destination_working_dir.files.append(File(destination_file, self.currentUser))     
 
     def mv(self, destination, source):
 
         if source[0] == '/': # set directory absolute / relative
-            source_working_dir = self.currentDir.findRoot()
+            source_working_dir = self.rootDir
         else:
-            source_working_dir = self.currentDir
+            source_working_dir = self.currentUser.currentDir
         
         if destination[0] == '/':
-            destination_working_dir = self.currentDir.findRoot()
+            destination_working_dir = self.rootDir
         else:
-            destination_working_dir = self.currentDir
+            destination_working_dir = self.currentUser.currentDir
 
         source_path = pathSplit(source)
         destination_path = pathSplit(destination)
@@ -371,15 +441,15 @@ class User:
 
         # <5> is covered within pathParser loop
 
-        destination_working_dir.files.append(File(destination_file, self))
+        destination_working_dir.files.append(File(destination_file, self.currentUser))
         return 
 
     def rm(self, dir):
 
         if dir[0] == '/': # is path relative or absolute
-            workingDir = self.currentDir.findRoot()
+            workingDir = self.rootDir
         else:
-            workingDir = self.currentDir
+            workingDir = self.currentUser.currentDir
 
         pathLs = pathSplit(dir) # path preprocessing
         
@@ -411,12 +481,12 @@ class User:
 
     def rmdir(self, path):
         if path[0] == '/': # abs or rel path
-            workingDir = self.currentDir.findRoot()
+            workingDir = self.rootDir
         else:
-            workingDir = self.currentDir
+            workingDir = self.currentUser.currentDir
 
         if path == '/':
-            if (len(self.currentDir.findRoot().files) != 0) or (len(self.currentDir.findRoot().subdirs) != 0):
+            if (len(self.rootDir.files) != 0) or (len(self.rootDir.subdirs) != 0):
                 print("rmdir: Directory not empty")
             else:
                 print("rmdir: Cannot remove pwd")
@@ -445,7 +515,7 @@ class User:
             else:
                 print("rmdir: Directory not empty")
             return  
-        elif dir_to_delete == self.currentDir.name:
+        elif dir_to_delete == self.currentUser.currentDir.name:
             print("rmdir: Cannot remove pwd")
             return 
 
@@ -483,75 +553,12 @@ class User:
         pass 
 
     def ls(self, path=None, l=None, d=None, a=None):
-        for i in self.currentDir.files:
+        for i in self.currentUser.currentDir.files:
             print(i.name)
-        for y in self.currentDir.subdirs:
+        for y in self.currentUser.currentDir.subdirs:
             print("/" + y.name)
 
 
-class Directory:
-
-    def __init__(self, name, parent, user=None) -> None:
-        self.name = name 
-        self.parent = parent 
-        self.subdirs = []
-        self.files = []
-        self.perms = {user:"drwxr-x"}
-
-    
-    def getPath(self): # returns absolute path to directory 
-        if (self.parent == None):
-            return "/"
-        elif (self.parent.parent == None):
-            return self.parent.getPath() + self.name 
-        else: 
-            return self.parent.getPath() + "/{}".format(self.name)         
-
-    def findRoot(self): # recursive method to find root directory from whatever the given directory is
-        # print(self.parent)
-        if self.parent == None:
-            return self 
-        else: 
-            return(self.parent.findRoot())
-
-    def BFS(self, goal):
-        for folder in self.subdirs:
-            if folder.name == goal:
-                return True 
-            else:
-                for subfolder in folder.subdirs:
-                    subfolder.BFS(goal)
-
-        return False
-
-class File:
-
-    def __init__(self, name, user) -> None:
-        self.name = name 
-        self.perms = {user : "-rw-r--"} # dictionary to store user perms 
-    pass 
-
-class Namespace: # backend puppetmaster class
-
-    def __init__(self) -> None:
-        
-        self.rootDir = None 
-        self.rootUser = None 
-        self.currentUser = None 
-
-        self.otherUsers = []
-        # perms-map?
-
-    def setRootDir(self, dir: Directory):
-        assert (dir.parent == None)
-        self.rootDir = dir 
-
-    def setRootUser(self, usr: User):
-        assert (usr.root == True)
-        self.rootUser = usr
-        
-    def setCurrentUser(self, usr: User):
-        self.currentUser = usr 
 
 def main():
 
@@ -569,10 +576,10 @@ def main():
     # init curr user variable to root user 
     currUser = namespace.currentUser
 
-    fnList = {"exit":currUser.exit, "pwd":currUser.pwd, \
-        "cd":currUser.cd, "mkdir":currUser.mkdir, \
-            "touch":currUser.touch, "ls":currUser.ls, "cp": currUser.cp, \
-                "mv": currUser.mv, "rm": currUser.rm, "rmdir": currUser.rmdir, "su": currUser.su}
+    fnList = {"exit":namespace.exit, "pwd":namespace.pwd, \
+        "cd":namespace.cd, "mkdir":namespace.mkdir, \
+            "touch":namespace.touch, "ls":namespace.ls, "cp": namespace.cp, \
+                "mv": namespace.mv, "rm": namespace.rm, "rmdir": namespace.rmdir, "su": namespace.su}
 
     while True: # cmdline interpreter loop 
         currUser = namespace.currentUser
