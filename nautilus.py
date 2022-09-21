@@ -363,7 +363,7 @@ class User:
                 break
 
         if not (found):
-            print("cp: No such file")
+            print("mv: No such file")
             return 
 
         # <5> is covered within pathParser loop
