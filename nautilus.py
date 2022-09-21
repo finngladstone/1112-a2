@@ -1,3 +1,6 @@
+from tokenize import Name
+
+
 class AncestorError(Exception):
     pass
 
@@ -13,7 +16,6 @@ def pathSplit(dir):
         pathLs.remove("")
     
     return pathLs
-    
 
 class User:
 
@@ -522,31 +524,59 @@ class Directory:
 
         return False
 
-
-
 class File:
 
     def __init__(self, name, user) -> None:
         self.name = name 
         self.perms = {user : "-rw-r--"} # dictionary to store user perms 
     pass 
-    
+
+class Namespace: # backend puppetmaster class
+
+    def __init__(self) -> None:
+        
+        self.rootDir = None 
+        self.rootUser = None 
+        self.currentUser = None 
+
+        self.otherUsers = []
+        # perms-map?
+
+    def setRootDir(self, dir: Directory):
+        assert (dir.parent == None)
+        self.rootDir = dir 
+
+    def setRootUser(self, usr: User):
+        assert (usr.root == True)
+        self.rootUser = usr
+        
+    def setCurrentUser(self, usr: User):
+        self.currentUser = usr 
 
 def main():
 
+    namespace = Namespace()
+
+    namespace.setRootDir(Directory("/", None))
+    namespace.setRootUser(User("root", True, namespace.rootDir))
+    
+    namespace.setCurrentUser(namespace.rootUser)
+
     # init root directory + root user 
-    rootDir = Directory("/", None) 
-    rootUser = User("root", True, rootDir)
+    # rootDir = Directory("/", None) 
+    # rootUser = User("root", True, rootDir)
 
     # init curr user variable to root user 
-    currUser = rootUser
+    currUser = namespace.currentUser
 
     fnList = {"exit":currUser.exit, "pwd":currUser.pwd, \
         "cd":currUser.cd, "mkdir":currUser.mkdir, \
             "touch":currUser.touch, "ls":currUser.ls, "cp": currUser.cp, \
-                "mv": currUser.mv, "rm": currUser.rm, "rmdir": currUser.rmdir}
+                "mv": currUser.mv, "rm": currUser.rm, "rmdir": currUser.rmdir, "su": currUser.su}
 
     while True: # cmdline interpreter loop 
+        currUser = namespace.currentUser
+
         lineStart = "{}:{}$ ".format(currUser.name, currUser.currentDir.getPath())
         keyboard = input(lineStart)
 
