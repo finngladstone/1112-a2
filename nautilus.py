@@ -14,6 +14,7 @@ def pathSplit(dir):
     
     return pathLs
 
+
 def printWarning():
     print("WARNING: You are just about to delete the root account")
     print("Usually this is never required as it may render the whole system unusable")
@@ -90,7 +91,7 @@ class Namespace: # backend puppetmaster class - allows user management
         self.userLs = []
         # perms-map?
 
-    """ ATTRIBUTES + ABSTRACT COMMANDS"""
+    """ NAMESPACE ATTRIBUTE MANIPULATION """
 
     def addUser(self, usr: User):
         if usr not in self.userLs:
@@ -108,6 +109,15 @@ class Namespace: # backend puppetmaster class - allows user management
         
     def setCurrentUser(self, usr: User):
         self.currentUser = usr 
+
+    """ NAMESPACE HELPER COMMANDS"""
+
+    def get_working_dir(self, path): # used by path-interpreting fns to determine if path is rel or absolute
+
+        if path[0] == '/':
+            return self.rootDir
+        else:
+            return self.currentUser.currentDir
 
     def pathParser(self, dir, workingDir, p=None):
 
@@ -170,12 +180,7 @@ class Namespace: # backend puppetmaster class - allows user management
 
             return 
         
-        if dir[0] == '/': # sets working directory variable depending on if abs/rel path
-            workingDir = self.rootDir
-        else:            # allows us to investigate directory structure without actually changing currentDir 
-            workingDir = self.currentUser.currentDir
-
-
+        workingDir = self.get_working_dir(dir)
         pathLs = pathSplit(dir)
         
         objectOfInterest = pathLs.pop() # dir we are attempting to reach (at the end of the dir tree)
@@ -219,10 +224,7 @@ class Namespace: # backend puppetmaster class - allows user management
 
     def mkdir(self, dir, p=None): # need to implement perms! 
 
-        if dir[0] == '/':
-            workingDir = self.rootDir
-        else:
-            workingDir = self.currentUser.currentDir
+        workingDir = self.get_working_dir(dir)
 
         pathLs = pathSplit(dir)
         
@@ -269,10 +271,7 @@ class Namespace: # backend puppetmaster class - allows user management
 
     def touch(self, dir): 
 
-        if dir[0] == '/': # is path relative or absolute
-            workingDir = self.rootDir
-        else:
-            workingDir = self.currentUser.currentDir
+        workingDir = self.get_working_dir(dir)
 
         pathLs = pathSplit(dir) # path preprocessing
         
@@ -301,15 +300,9 @@ class Namespace: # backend puppetmaster class - allows user management
 
     def cp(self, destination, source): # have to flip input due to cmdline flipper to accomodate optional args
 
-        if source[0] == '/': # set directory absolute / relative
-            source_working_dir = self.rootDir
-        else:
-            source_working_dir = self.currentUser.currentDir
+        source_working_dir = self.get_working_dir(source)
+        destination_working_dir = self.get_working_dir(destination)
         
-        if destination[0] == '/':
-            destination_working_dir = self.rootDir
-        else:
-            destination_working_dir = self.currentUser.currentDir
 
         source_path = pathSplit(source)
         destination_path = pathSplit(destination)
@@ -375,15 +368,8 @@ class Namespace: # backend puppetmaster class - allows user management
 
     def mv(self, destination, source):
 
-        if source[0] == '/': # set directory absolute / relative
-            source_working_dir = self.rootDir
-        else:
-            source_working_dir = self.currentUser.currentDir
-        
-        if destination[0] == '/':
-            destination_working_dir = self.rootDir
-        else:
-            destination_working_dir = self.currentUser.currentDir
+        source_working_dir = self.get_working_dir(source)
+        destination_working_dir = self.get_working_dir(destination)
 
         source_path = pathSplit(source)
         destination_path = pathSplit(destination)
@@ -454,10 +440,7 @@ class Namespace: # backend puppetmaster class - allows user management
 
     def rm(self, dir):
 
-        if dir[0] == '/': # is path relative or absolute
-            workingDir = self.rootDir
-        else:
-            workingDir = self.currentUser.currentDir
+        workingDir = self.get_working_dir(dir)
 
         pathLs = pathSplit(dir) # path preprocessing
         
@@ -488,10 +471,7 @@ class Namespace: # backend puppetmaster class - allows user management
         return 
 
     def rmdir(self, path):
-        if path[0] == '/': # abs or rel path
-            workingDir = self.rootDir
-        else:
-            workingDir = self.currentUser.currentDir
+        workingDir = self.get_working_dir(path)
 
         if path == '/':
             if (len(self.rootDir.files) != 0) or (len(self.rootDir.subdirs) != 0):
@@ -546,6 +526,9 @@ class Namespace: # backend puppetmaster class - allows user management
 
 
     def chmod(self, path, perms, r=None):
+
+        
+        
         pass 
 
     def chown(self, path, user, r=None):
@@ -627,11 +610,6 @@ def main():
     
     namespace.setCurrentUser(namespace.rootUser)
 
-    # init root directory + root user 
-    # rootDir = Directory("/", None) 
-    # rootUser = User("root", True, rootDir)
-
-    # init curr user variable to root user 
     currUser = namespace.currentUser
 
     fnList = {"exit":namespace.exit, "pwd":namespace.pwd, \
