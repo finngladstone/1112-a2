@@ -368,11 +368,43 @@ class User:
 
         # <5> is covered within pathParser loop
 
-        destination_working_dir.files.append(File(destination_file, destination_working_dir, self))
+        destination_working_dir.files.append(File(destination_file, self))
         return 
 
-    def rm(self, path):
-        pass 
+    def rm(self, dir):
+
+        if dir[0] == '/': # is path relative or absolute
+            workingDir = self.currentDir.findRoot()
+        else:
+            workingDir = self.currentDir
+
+        pathLs = pathSplit(dir) # path preprocessing
+        
+        objectOfInterest = pathLs.pop() # dir we are attempting to reach (at the end of the dir tree)
+
+        if len(pathLs) > 0:     # attempt to navigate to directory in which the fill will exist
+            try:
+                workingDir = self.pathParser(pathLs, workingDir)
+            except AncestorError:
+                print("rm: No such file")
+                return
+            except IsAFileError:
+                print("rm: No such file")
+                return
+
+        for subdir in workingDir.subdirs: # if subdir already exists with same name
+            if subdir.name == objectOfInterest:
+                print("rm: Is a directory") 
+                return 
+
+        for file in workingDir.files: # file is found and correctly removed 
+            if file.name == objectOfInterest:
+                workingDir.files.remove(file)
+                return 
+
+        # only executed if other routes fail 
+        print("rm: No such file")
+        return 
 
     def chmod(self, path, perms, r=None):
         pass 
@@ -453,7 +485,7 @@ def main():
     fnList = {"exit":currUser.exit, "pwd":currUser.pwd, \
         "cd":currUser.cd, "mkdir":currUser.mkdir, \
             "touch":currUser.touch, "ls":currUser.ls, "cp": currUser.cp, \
-                "mv": currUser.mv}
+                "mv": currUser.mv, "rm": currUser.rm}
 
     while True: # cmdline interpreter loop 
         lineStart = "{}:{}$ ".format(currUser.name, currUser.currentDir.getPath())
@@ -469,7 +501,7 @@ def main():
                 fnList[cmd]()
             except KeyError:
                 print("{}: Command not found".format(cmd))
-            except TypeError:
+            except TypeError: # can block some hard crash errors - might need to refactor
                 print("{}: Invalid syntax".format(cmd))
             
         elif len(keyboard) > 1:
