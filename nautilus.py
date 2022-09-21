@@ -406,6 +406,45 @@ class User:
         print("rm: No such file")
         return 
 
+    def rmdir(self, path):
+        if path[0] == '/': # abs or rel path
+            workingDir = self.currentDir.findRoot()
+        else:
+            workingDir = self.currentDir
+
+        pathLs = pathSplit(path)
+        dir_to_delete = pathLs.pop()
+
+        if len(pathLs) > 0:
+            try:
+                workingDir = self.pathParser(pathLs, workingDir)
+            except AncestorError:
+                print("rmdir: No such file or directory")
+                return
+            except IsAFileError:
+                print("rmdir: No such file or directory")
+                return 
+
+        if dir_to_delete == '.':
+            print("rmdir: Cannot remove pwd")
+        elif dir_to_delete == '..':
+            print("Attempted to remove parent")
+
+        for file in workingDir.files:
+            if file.name == dir_to_delete:
+                print("rmdir: Not a directory")
+                return 
+
+        for subdir in workingDir.subdirs:
+            if subdir.name == dir_to_delete:
+                if len(subdir.subdirs) == 0 and len(subdir.files) == 0:
+                    workingDir.subdirs.remove(subdir)
+                    return 
+                else:
+                    print("rmdir: Directory not empty")
+                    return 
+
+
     def chmod(self, path, perms, r=None):
         pass 
 
@@ -485,7 +524,7 @@ def main():
     fnList = {"exit":currUser.exit, "pwd":currUser.pwd, \
         "cd":currUser.cd, "mkdir":currUser.mkdir, \
             "touch":currUser.touch, "ls":currUser.ls, "cp": currUser.cp, \
-                "mv": currUser.mv, "rm": currUser.rm}
+                "mv": currUser.mv, "rm": currUser.rm, "rmdir": currUser.rmdir}
 
     while True: # cmdline interpreter loop 
         lineStart = "{}:{}$ ".format(currUser.name, currUser.currentDir.getPath())
