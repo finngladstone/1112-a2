@@ -414,9 +414,12 @@ class User:
             workingDir = self.currentDir
 
         if path == '/':
-            print("rmdir: Cannot remove pwd")
+            if (len(self.currentDir.findRoot().files) != 0) or (len(self.currentDir.findRoot().subdirs) != 0):
+                print("rmdir: Directory not empty")
+            else:
+                print("rmdir: Cannot remove pwd")
+            
             return
-
 
         pathLs = pathSplit(path)
         dir_to_delete = pathLs.pop()
@@ -440,6 +443,9 @@ class User:
             else:
                 print("rmdir: Directory not empty")
             return  
+        elif dir_to_delete == self.currentDir.name:
+            print("rmdir: Cannot remove pwd")
+            return 
 
         for file in workingDir.files:
             if file.name == dir_to_delete:
