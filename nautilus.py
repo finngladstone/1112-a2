@@ -13,6 +13,7 @@ def pathSplit(dir):
         pathLs.remove("")
     
     return pathLs
+    
 
 class User:
 
@@ -429,10 +430,7 @@ class User:
             print("rmdir: Cannot remove pwd")
             return 
         elif dir_to_delete == '/':
-            if workingDir.parent == None: # currentdir in root
-                print("rmdir: Cannot remove pwd")
-            else:
-                print("rmdir: Directory not empty")
+            print("rmdir: Cannot remove pwd")
             return
 
         elif dir_to_delete == '..':
