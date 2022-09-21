@@ -292,8 +292,84 @@ class User:
 
         destination_working_dir.files.append(File(destination_file, self))     
 
-    def mv(self, source, destination):
-        pass 
+    def mv(self, destination, source):
+
+        if source[0] == '/': # set directory absolute / relative
+            source_working_dir = self.currentDir.findRoot()
+        else:
+            source_working_dir = self.currentDir
+        
+        if destination[0] == '/':
+            destination_working_dir = self.currentDir.findRoot()
+        else:
+            destination_working_dir = self.currentDir
+
+        source_path = pathSplit(source)
+        destination_path = pathSplit(destination)
+
+        source_file = source_path.pop()
+        destination_file = destination_path.pop()
+
+        if len(source_path) > 0: # check the error messages here
+            try:
+                source_working_dir = self.pathParser(source_path, source_working_dir)
+            except AncestorError:
+                print("mv: Ancestor directory missing")
+                return
+            except IsAFileError:
+                print("mv: Ancestory directory missing")
+                return
+
+        if len(destination_path) > 0:
+            try:
+                destination_working_dir = self.pathParser(destination_path, destination_working_dir)
+            except AncestorError:
+                print("mv: No such file or directory")
+                return
+            except IsAFileError:
+                print("mv: No such file or directory")
+                return
+
+            """ Checking if source file and destination position are valid / not taken """
+    
+        # <1> Checks that destination file doesnt already exist
+        for file in destination_working_dir.files:
+            if file.name == destination_file:
+                print("mv: File exists")
+                return
+
+        # <3> Checks that destination is is not a directory 
+
+        for dir in destination_working_dir.subdirs:
+            if dir.name == destination_file:
+                print("mv: Destination is a directory")
+                return
+
+        # <4> Checks that soruce does not refer to a directory 
+        for dir in source_working_dir.subdirs: 
+            if dir.name == source_file:
+                print("mv: Source is a directory")
+                return 
+
+        # <2> Checks that source exists 
+
+        """ REMOVES FILE FROM SOURCE """
+
+        found = False 
+        for file in source_working_dir.files:
+            if file.name == source_file:
+                found = True 
+                source_working_dir.files.remove(file)
+                break
+
+        if not (found):
+            print("cp: No such file")
+            return 
+
+        # <5> is covered within pathParser loop
+
+        destination_working_dir.files.append(File(destination_file, destination_working_dir, self))
+        return 
 
     def rm(self, path):
         pass 
@@ -376,7 +452,8 @@ def main():
 
     fnList = {"exit":currUser.exit, "pwd":currUser.pwd, \
         "cd":currUser.cd, "mkdir":currUser.mkdir, \
-            "touch":currUser.touch, "ls":currUser.ls, "cp": currUser.cp}
+            "touch":currUser.touch, "ls":currUser.ls, "cp": currUser.cp, \
+                "mv": currUser.mv}
 
     while True: # cmdline interpreter loop 
         lineStart = "{}:{}$ ".format(currUser.name, currUser.currentDir.getPath())
