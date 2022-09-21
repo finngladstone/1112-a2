@@ -14,6 +14,13 @@ def pathSplit(dir):
     
     return pathLs
 
+def printWarning():
+    print("WARNING: You are just about to delete the root account")
+    print("Usually this is never required as it may render the whole system unusable")
+    print("If you really want this, call deluser with parameter --force")
+    print("(but this `deluser` does not allow `--force`, haha)")
+    print("Stopping now without having performed any action")
+
 class User:
 
     def __init__(self, name, root=False, currentDir=None) -> None:
@@ -21,9 +28,6 @@ class User:
         self.root = root
         self.currentDir = currentDir
         self.perms = {}
-
-    
-
 
     def updateCurrentDir(self, dir):
 
@@ -33,8 +37,6 @@ class User:
             print("Directory is wrong file type")
         
     
-
-
 class Directory:
 
     def __init__(self, name, parent, user=None) -> None:
@@ -85,10 +87,16 @@ class Namespace: # backend puppetmaster class - allows user management
         self.rootUser = None 
         self.currentUser = None 
 
-        self.otherUsers = []
+        self.userLs = []
         # perms-map?
 
     """ ATTRIBUTES + ABSTRACT COMMANDS"""
+
+    def addUser(self, usr: User):
+        if usr not in self.userLs:
+            self.userLs.append(usr)
+        else:
+            print("Restart life")
 
     def setRootDir(self, dir: Directory):
         assert (dir.parent == None)
@@ -150,7 +158,7 @@ class Namespace: # backend puppetmaster class - allows user management
     def cd(self, dir):
         
         if (dir == '/'): # user wants to navigate to root 
-            self.currentUser.updateCurrentDir(self.currentUser.currentDir.findRoot())
+            self.currentUser.updateCurrentDir(self.rootDir)
             return 
         
         elif (dir == '.'): # user navigates to current dir bruh
@@ -544,10 +552,38 @@ class Namespace: # backend puppetmaster class - allows user management
         pass 
 
     def adduser(self, user):
-        pass 
+        if (self.currentUser != self.rootUser): # current user must be root
+            return 
+        
+        for usr in self.userLs:
+            if usr.name == user:
+                print("adduser: The user already exists")
+                return
+        
+        self.addUser(User(user, False, None))
+
 
     def deluser(self, user):
-        pass 
+
+        if (self.currentUser != self.rootUser):
+            return 
+        
+        temp = None
+        for usr in self.userLs:
+            if usr.name == user:
+                temp = usr
+
+        if temp == None:
+            print("deluser: The user does not exist")
+            return 
+        elif temp == self.rootUser: # root user!
+            printWarning()
+            return; 
+        else:
+            self.userLs.remove(temp)
+            return 
+
+            
 
     def su(self, user):
         pass 
@@ -565,7 +601,8 @@ def main():
     namespace = Namespace()
 
     namespace.setRootDir(Directory("/", None))
-    namespace.setRootUser(User("root", True, namespace.rootDir))
+    namespace.addUser(User("root", True, namespace.rootDir))
+    namespace.setRootUser(namespace.userLs[0])
     
     namespace.setCurrentUser(namespace.rootUser)
 
@@ -579,7 +616,8 @@ def main():
     fnList = {"exit":namespace.exit, "pwd":namespace.pwd, \
         "cd":namespace.cd, "mkdir":namespace.mkdir, \
             "touch":namespace.touch, "ls":namespace.ls, "cp": namespace.cp, \
-                "mv": namespace.mv, "rm": namespace.rm, "rmdir": namespace.rmdir, "su": namespace.su}
+                "mv": namespace.mv, "rm": namespace.rm, "rmdir": namespace.rmdir, "su": namespace.su, \
+                    "adduser": namespace.adduser, "deluser": namespace.deluser}
 
     while True: # cmdline interpreter loop 
         currUser = namespace.currentUser
