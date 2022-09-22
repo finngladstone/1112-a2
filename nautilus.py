@@ -67,8 +67,6 @@ class Directory:
     def get_other_perms(self):
         return self.other_perms
 
-
-
     def output_perms(self):
         s = "d" + self.owner_perms + self.other_perms
         return s
@@ -102,7 +100,9 @@ class Namespace: # backend puppetmaster class - allows user management
         self.currentUser = None 
 
         self.userLs = []
-        # perms-map?
+        
+        self.allFiles = []
+        self.allDirs = []
 
     """ NAMESPACE ATTRIBUTE MANIPULATION """
 
@@ -183,13 +183,17 @@ class Namespace: # backend puppetmaster class - allows user management
 
         return workingDir
 
+    
+    
     """ BASH COMMANDS """
 
-    def exit(self): # sorted
+
+
+    def exit(self): 
         print("bye, {}".format(self.currentUser.name))
         exit(0)
 
-    def pwd(self): # sorted? depends on currentDir val which needs addressing
+    def pwd(self): 
         print(self.currentUser.currentDir.getPath())
 
     def cd(self, dir):
@@ -204,7 +208,6 @@ class Namespace: # backend puppetmaster class - allows user management
         elif (dir == '..'):
             if (self.currentUser.currentDir.parent != None):
                 self.currentUser.updateCurrentDir(self.currentUser.currentDir.parent)
-
             return 
         
         workingDir = self.get_working_dir(dir)
