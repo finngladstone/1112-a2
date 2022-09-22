@@ -439,22 +439,28 @@ class Namespace: # backend puppetmaster class - allows user management
 
         if len(source_path) > 0: # check the error messages here
             try:
-                source_working_dir = self.pathParser(source_path, source_working_dir)
+                source_working_dir = self.pathParser(source_path, source_working_dir, False, True)
             except AncestorError:
                 print("cp: Ancestor directory missing")
                 return
             except IsAFileError:
                 print("cp: Ancestory directory missing")
                 return
+            except PermissionsError:
+                print("cp: Permission denied")
+                return
 
         if len(destination_path) > 0:
             try:
-                destination_working_dir = self.pathParser(destination_path, destination_working_dir)
+                destination_working_dir = self.pathParser(destination_path, destination_working_dir, False, True)
             except AncestorError:
                 print("cp: No such file or directory")
                 return
             except IsAFileError:
                 print("cp: No such file or directory")
+                return
+            except PermissionsError:
+                print("cp: Permission denied")
                 return
 
             """ Checking if source file and destination position are valid / not taken """
@@ -489,7 +495,30 @@ class Namespace: # backend puppetmaster class - allows user management
             print("cp: No such file")
             return 
 
-        # <5> is covered within pathParser loop
+        """ PERMS CHECK  """
+        # check for read on source
+        if self.currentUser == self.rootUser:
+            pass
+        elif self.currentUser == source_working_dir.owner:
+            if not "r" in source_working_dir.get_owner_perms():
+                print("cp: Permission denied")
+                return 
+        else:
+            if not "r" in source_working_dir.get_other_perms():
+                print("cp: Permission denied")
+                return 
+
+        # check for write on destination 
+        if self.currentUser == self.rootUser:
+            pass
+        elif self.currentUser == destination_working_dir.owner:
+            if not "w" in destination_working_dir.get_owner_perms():
+                print("cp: Permission denied")
+                return 
+        else:
+            if not "w" in destination_working_dir.get_other_perms():
+                print("cp: Permission denied")
+                return
 
         destination_working_dir.files.append(File(destination_file, self.currentUser))     
 
@@ -509,22 +538,28 @@ class Namespace: # backend puppetmaster class - allows user management
 
         if len(source_path) > 0: # check the error messages here
             try:
-                source_working_dir = self.pathParser(source_path, source_working_dir)
+                source_working_dir = self.pathParser(source_path, source_working_dir, False, True)
             except AncestorError:
                 print("mv: Ancestor directory missing")
                 return
             except IsAFileError:
                 print("mv: Ancestory directory missing")
                 return
+            except PermissionsError:
+                print("mv: Permission denied")
+                return 
 
         if len(destination_path) > 0:
             try:
-                destination_working_dir = self.pathParser(destination_path, destination_working_dir)
+                destination_working_dir = self.pathParser(destination_path, destination_working_dir, False, True)
             except AncestorError:
                 print("mv: No such file or directory")
                 return
             except IsAFileError:
                 print("mv: No such file or directory")
+                return
+            except PermissionsError:
+                print("mv: Permission denied")
                 return
 
             """ Checking if source file and destination position are valid / not taken """
@@ -551,20 +586,45 @@ class Namespace: # backend puppetmaster class - allows user management
         # <2> Checks that source exists 
 
         """ REMOVES FILE FROM SOURCE """
-
-        found = False 
+ 
         for file in source_working_dir.files:
             if file.name == source_file:
-                found = True 
-                source_working_dir.files.remove(file)
+                fl = file 
                 break
-
-        if not (found):
+        else:
             print("mv: No such file")
             return 
 
+        
+        """ PERMS CHECK  """
+        # check for write on source
+        if self.currentUser == self.rootUser:
+            pass
+        elif self.currentUser == source_working_dir.owner:
+            if not "w" in source_working_dir.get_owner_perms():
+                print("mv: Permission denied")
+                return 
+        else:
+            if not "w" in source_working_dir.get_other_perms():
+                print("mv: Permission denied")
+                return 
+
+        # check for write on destination 
+        if self.currentUser == self.rootUser:
+            pass
+        elif self.currentUser == destination_working_dir.owner:
+            if not "w" in destination_working_dir.get_owner_perms():
+                print("mv: Permission denied")
+                return 
+        else:
+            if not "w" in destination_working_dir.get_other_perms():
+                print("mv: Permission denied")
+                return
+
+
         # <5> is covered within pathParser loop
 
+        source_working_dir.files.remove(fl)
         destination_working_dir.files.append(File(destination_file, self.currentUser))
         return 
 
