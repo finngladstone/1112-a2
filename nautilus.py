@@ -1,3 +1,6 @@
+from re import sub
+
+
 class AncestorError(Exception):
     pass
 
@@ -60,11 +63,14 @@ class Directory:
         else: 
             return self.parent.getPath() + "/{}".format(self.name)         
 
-    def get_user_perms(self, user):
-        if user == self.owner:
-            return self.owner_perms
-        else:
-            return self.other_perms
+    def get_owner_perms(self):
+        return self.owner_perms
+           
+
+    def get_other_perms(self):
+        return self.other_perms
+
+
 
     def output_perms(self):
         s = "d" + self.owner_perms + self.other_perms
@@ -75,7 +81,19 @@ class File:
     def __init__(self, name, user) -> None:
         self.name = name 
         self.owner = user
-        self.perms = {user : "-rw-r--"} # dictionary to store user perms 
+        
+        self.owner_perms = "rwx"
+        self.other_perms = "r-w"
+
+    def get_owner_perms(self):
+        return self.owner_perms
+    
+    def get_other_perms(self):
+        return self.other_perms
+        
+    def output_perms(self):
+        s = "-" + self.owner_perms + self.other_perms
+        return s
     
 
 class Namespace: # backend puppetmaster class - allows user management
@@ -537,7 +555,15 @@ class Namespace: # backend puppetmaster class - allows user management
         print("rmdir: No such file or directory")
 
 
-    def chmod(self, path, perms, r=None):
+    def chmod(self, path, perms, r=None): # good luck
+
+        # check that mode is valid
+        valid_char = ["a", "o", "u", "d", "r", "w", "x", "+", "-", "="]
+
+        for char in perms:
+            if char not in valid_char:
+                print("chmod: Invalid mode")
+                return
 
         workingDir = self.get_working_dir(path)
         pathLs = pathSplit(path)
@@ -556,17 +582,94 @@ class Namespace: # backend puppetmaster class - allows user management
 
         # find file / subdir method 
 
-        
+        fl = None
 
+        for file in workingDir.files:
+            if file.name == obj_of_interest:
+                fl = file
+                break 
+        else:
+            for subdir in workingDir.subdirs:
+                if subdir.name == obj_of_interest:
+                    fl = subdir
+                    break 
 
+        if fl == None:
+            print("chmod: No such file or directory")
 
+        if (self.currentUser != fl.owner) or (self.currentUser != self.rootUser):
+            print("chmod: Operation not permitted")
+            return 
 
+        owner_bits = list(fl.get_owner_perms()) 
+        other_bits = list(fl.get_other_perms())
 
+        def modify_bits(bits, to_modify, operator): # performs bit modification
+            assert (len(bits) <= 3 and len(to_modify) <= 3)
 
+            if operator == "+":
 
-        
-        
-        pass 
+                for char in bits:
+                    
+                    if char == "r":
+                        to_modify[0] = "r"
+                    if char == "w":
+                        to_modify[1] = "w"
+                    if char == "x":
+                        to_modify[2] = "x"
+
+            elif operator == "=":
+                
+                i = 0
+                while i < 3:
+                    to_modify[i] = bits[i]
+                    i+=1
+            
+            elif operator == "-":
+                
+                for char in bits:
+                    if char == "r":
+                        to_modify[0] = "-"
+                    if char == "w":
+                        to_modify[1] = "-"
+                    if char == "x":
+                        to_modify[2] = "-"
+
+            else:
+                print("Operator is invalid in modify_bits()")
+                return 
+
+            return to_modify
+
+        if "+" in perms:
+            if "u" in perms:
+                owner_bits = modify_bits(perms.split("+")[1], owner_bits, "+")
+            if "o" in perms:
+                other_bits = modify_bits(perms.split("+")[1], other_bits, "+")
+            if "a" in perms:
+                owner_bits = modify_bits(perms.split("+")[1], owner_bits, "+")
+                other_bits = modify_bits(perms.split("+")[1], other_bits, "+")
+
+        elif "=" in perms:
+            if "u" in perms:
+                owner_bits = modify_bits(perms.split("=")[1], owner_bits, "=")
+            if "o" in perms:
+                other_bits = modify_bits(perms.split("=")[1], other_bits, "=")
+            if "a" in perms:
+                owner_bits = modify_bits(perms.split("=")[1], owner_bits, "=")
+                other_bits = modify_bits(perms.split("=")[1], other_bits, "=")
+
+        elif "-" in perms:
+            if "u" in perms:
+                owner_bits = modify_bits(perms.split("-")[1], owner_bits, "-")
+            if "o" in perms:
+                other_bits = modify_bits(perms.split("-")[1], other_bits, "-")
+            if "a" in perms:
+                owner_bits = modify_bits(perms.split("-")[1], owner_bits, "-")
+                other_bits = modify_bits(perms.split("-")[1], other_bits, "-")
+
+        fl.owner_perms = "".join(owner_bits)
+        fl.other_perms = "".join(other_bits)
 
     def chown(self, path, user, r=None):
         pass 
@@ -631,9 +734,9 @@ class Namespace: # backend puppetmaster class - allows user management
 
     def ls(self, path=None, l=None, d=None, a=None):
         for i in self.currentUser.currentDir.files:
-            print(i.name)
+            print(i.name + " " + i.output_perms())
         for y in self.currentUser.currentDir.subdirs:
-            print("/" + y.name)
+            print("/" + y.name + " " + y.output_perms())
 
 
 
@@ -653,7 +756,7 @@ def main():
         "cd":namespace.cd, "mkdir":namespace.mkdir, \
             "touch":namespace.touch, "ls":namespace.ls, "cp": namespace.cp, \
                 "mv": namespace.mv, "rm": namespace.rm, "rmdir": namespace.rmdir, "su": namespace.su, \
-                    "adduser": namespace.adduser, "deluser": namespace.deluser}
+                    "adduser": namespace.adduser, "deluser": namespace.deluser, "chmod": namespace.chmod}
 
     while True: # cmdline interpreter loop 
         currUser = namespace.currentUser
@@ -682,8 +785,8 @@ def main():
 
             except KeyError:
                 print("{}: Command not found".format(cmd)) 
-            except TypeError:
-                print("{}: Invalid syntax".format(cmd))
+            # except TypeError:
+            #     print("{}: Invalid syntax".format(cmd))
             except IsAFileError:
                 print("{}: Destination is a file".format(cmd))
 
