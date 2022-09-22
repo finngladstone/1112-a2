@@ -79,8 +79,8 @@ class File:
         self.name = name 
         self.owner = user
         
-        self.owner_perms = "rwx"
-        self.other_perms = "r-w"
+        self.owner_perms = "rw-"
+        self.other_perms = "r--"
 
     def get_owner_perms(self):
         return self.owner_perms
@@ -562,34 +562,37 @@ class Namespace: # backend puppetmaster class - allows user management
                 print("chmod: Invalid mode")
                 return
 
-        workingDir = self.get_working_dir(path)
-        pathLs = pathSplit(path)
+        if path == "/":
+            fl = self.rootDir
+        else:
+            workingDir = self.get_working_dir(path)
+            pathLs = pathSplit(path)
 
-        obj_of_interest = pathLs.pop()  
+            obj_of_interest = pathLs.pop()  
 
-        if len(pathLs) > 0:
-            try:
-                workingDir = self.pathParser(pathLs, workingDir)
-            except AncestorError:
-                print("chmod: No such file or directory")
-                return
-            except IsAFileError:
-                print("chmod: No such file or directory")
-                return 
+            if len(pathLs) > 0:
+                try:
+                    workingDir = self.pathParser(pathLs, workingDir)
+                except AncestorError:
+                    print("chmod: No such file or directory")
+                    return
+                except IsAFileError:
+                    print("chmod: No such file or directory")
+                    return 
 
         # find file / subdir method 
 
-        fl = None
+            fl = None
 
-        for file in workingDir.files:
-            if file.name == obj_of_interest:
-                fl = file
-                break 
-        else:
-            for subdir in workingDir.subdirs:
-                if subdir.name == obj_of_interest:
-                    fl = subdir
+            for file in workingDir.files:
+                if file.name == obj_of_interest:
+                    fl = file
                     break 
+            else:
+                for subdir in workingDir.subdirs:
+                    if subdir.name == obj_of_interest:
+                        fl = subdir
+                        break 
 
         if fl == None:
             print("chmod: No such file or directory")
@@ -747,6 +750,9 @@ class Namespace: # backend puppetmaster class - allows user management
         
         elif args[0] in modifiers:
             object_to_ls = self.currentUser.currentDir
+
+        elif args[0] == '/':
+            object_to_ls = self.rootDir
         
         else:
             path = args[0]
@@ -807,7 +813,7 @@ class Namespace: # backend puppetmaster class - allows user management
 
         elif isinstance(object_to_ls, File): 
             if "-l" in args:
-                print("{} {} {}".format(object_to_ls.output_perms(), object_to_ls.owner, object_to_ls.name))
+                print("{} {} {}".format(object_to_ls.output_perms(), object_to_ls.owner.name, object_to_ls.name))
             else:
                 print("{}".format(object_to_ls.name))
             
