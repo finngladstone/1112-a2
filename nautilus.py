@@ -91,7 +91,7 @@ class File:
         return s
     
 
-class Namespace: # backend puppetmaster class - allows user management
+class Namespace: # puppetmaster class 
 
     def __init__(self) -> None:
         
@@ -110,7 +110,7 @@ class Namespace: # backend puppetmaster class - allows user management
         if usr not in self.userLs:
             self.userLs.append(usr)
         else:
-            print("Restart life")
+            print("Delete system32") # backend error
 
     def setRootDir(self, dir: Directory):
         assert (dir.parent == None)
@@ -205,7 +205,7 @@ class Namespace: # backend puppetmaster class - allows user management
         elif (dir == '.'): # user navigates to current dir bruh
             return 
 
-        elif (dir == '..'):
+        elif (dir == '..'): # parent dir
             if (self.currentUser.currentDir.parent != None):
                 self.currentUser.updateCurrentDir(self.currentUser.currentDir.parent)
             return 
@@ -236,34 +236,31 @@ class Namespace: # backend puppetmaster class - allows user management
                 self.currentUser.updateCurrentDir(workingDir.parent)
             return 
 
-        
         for file in workingDir.files: 
             if file.name == objectOfInterest:
                 print("cd: Destination is a file")
+                break  
+        else: # i learned about this 3 days before this was due i am now a for/else enjoyer
+            for subdir in workingDir.subdirs:
+                if subdir.name == objectOfInterest:
+                    self.currentUser.updateCurrentDir(subdir)
+                break 
+            else:
+                print("cd: No such file or directory")
+        return 
 
-                return 
         
-        for subdir in workingDir.subdirs:
-            if subdir.name == objectOfInterest:
-                self.currentUser.updateCurrentDir(subdir)
-
-                return 
-        
-        # only executed if other loops fail to return 
-        print("cd: No such file or directory")
 
     def mkdir(self, dir, p=None): # need to implement perms! 
 
         workingDir = self.get_working_dir(dir)
-
         pathLs = pathSplit(dir)
-        
         objectOfInterest = pathLs.pop() # dir we are attempting to reach (at the end of the dir tree)
 
         if len(pathLs) > 0:
             if p:
                 try:
-                    workingDir = self.pathParser(pathLs, workingDir, True) # pathParser command with recursive create
+                    workingDir = self.pathParser(pathLs, workingDir, True) # pathParser command with recursive create! (-p)
                 except IsAFileError:
                     print("mkdir: Parent directory already exists as file")
                     return
@@ -297,7 +294,6 @@ class Namespace: # backend puppetmaster class - allows user management
         return
 
             
- 
 
     def touch(self, dir): 
 
@@ -383,16 +379,12 @@ class Namespace: # backend puppetmaster class - allows user management
 
         # <2> Checks that source exists
 
-        found = False 
         for file in source_working_dir.files:
             if file.name == source_file:
-                found = True 
-
-        if not (found):
+                break 
+        else:
             print("cp: No such file")
             return 
-
-        # <5> is covered within pathParser loop
 
         destination_working_dir.files.append(File(destination_file, self.currentUser))     
 
@@ -450,16 +442,13 @@ class Namespace: # backend puppetmaster class - allows user management
 
         # <2> Checks that source exists 
 
-        """ REMOVES FILE FROM SOURCE """
+        """ REMOVES FILE FROM SOURCE """ 
 
-        found = False 
         for file in source_working_dir.files:
             if file.name == source_file:
-                found = True 
-                source_working_dir.files.remove(file)
-                break
-
-        if not (found):
+                source_working_dir.files.remove(file) 
+                break 
+        else:
             print("mv: No such file")
             return 
 
@@ -494,10 +483,10 @@ class Namespace: # backend puppetmaster class - allows user management
         for file in workingDir.files: # file is found and correctly removed 
             if file.name == objectOfInterest:
                 workingDir.files.remove(file)
-                return 
-
-        # only executed if other routes fail 
-        print("rm: No such file")
+                break 
+        else:
+            print("rm: No such file")
+        
         return 
 
     def rmdir(self, path):
@@ -730,8 +719,6 @@ class Namespace: # backend puppetmaster class - allows user management
         return 
 
 
-        
-
     def adduser(self, user):
         if (self.currentUser != self.rootUser): # current user must be root
             print("adduser: Operation not permitted")
@@ -764,8 +751,6 @@ class Namespace: # backend puppetmaster class - allows user management
         else:
             self.userLs.remove(temp)
             return 
-
-            
 
     def su(self, user=None):
 
