@@ -1,3 +1,6 @@
+from logging import root
+
+
 class AncestorError(Exception):
     pass
 
@@ -20,7 +23,7 @@ def is_valid(obj: str): # goated n^2 time complexity
     "m", "n", "o", "p", "q", "r", 
     "s", "t", "u", "v", "w", "x", "y", 
     "z", "0", "1", "2", "3", "4", "5", 
-    "6", "7", "8", "9", "-", ".", "_", "\"", " ", "\u044f"]
+    "6", "7", "8", "9", "-", ".", "_", "\"", " ", "\u044f", "/"]
 
     for char in obj.lower():
         if char not in valid_set:
@@ -260,10 +263,23 @@ class Namespace: # backend puppetmaster class - allows user management
 
                 return 
         
-        for subdir in workingDir.subdirs:
+        for subdir in workingDir.subdirs: 
             if subdir.name == objectOfInterest:
-                self.currentUser.updateCurrentDir(subdir)
 
+                """  PERMS CHECK  """
+
+                if self.currentUser == self.rootUser:
+                    pass
+                
+                elif self.currentUser == subdir.owner and "x" in subdir.get_owner_perms():
+                    pass
+                elif "x" in subdir.get_other_perms():
+                    pass 
+                else:
+                    print("cd: Permission denied")
+                    return 
+                
+                self.currentUser.updateCurrentDir(subdir)
                 return 
         
         # only executed if other loops fail to return 
@@ -585,6 +601,15 @@ class Namespace: # backend puppetmaster class - allows user management
         for subdir in workingDir.subdirs:
             if subdir.name == dir_to_delete:
                 if len(subdir.subdirs) == 0 and len(subdir.files) == 0:
+
+                    """ PERMS CHECK """
+
+                    if self.currentUser == root:
+                        pass 
+                    else:
+                        pass
+                    
+
                     workingDir.subdirs.remove(subdir)
                     return 
                 else:
@@ -640,8 +665,8 @@ class Namespace: # backend puppetmaster class - allows user management
         if fl == None:
             print("chmod: No such file or directory")
 
-        if (self.currentUser != fl.owner) or (self.currentUser != self.rootUser):
-            print("chmod: Operation not permitted")
+        if (self.currentUser != fl.owner) and (self.currentUser != self.rootUser):
+            print("chmod: Permission denied")
             return 
 
         owner_bits = list(fl.get_owner_perms()) 
@@ -723,11 +748,7 @@ class Namespace: # backend puppetmaster class - allows user management
         fl.owner_perms = "".join(owner_bits)
         fl.other_perms = "".join(other_bits)
 
-    def chown(self, path, user, r=None):
-
-        if not is_valid(path):
-            print("chown: Invalid syntax")
-            return 
+    def chown(self, path, user, r=None): 
 
         if (self.currentUser != self.rootUser):
             print("chown: Operation not permitted")
@@ -740,6 +761,10 @@ class Namespace: # backend puppetmaster class - allows user management
         else:
             print("chown: Invalid user")
             return 
+
+        if not is_valid(path):
+            print("chown: Invalid syntax")
+            return
 
         workingDir = self.get_working_dir(path)
 
@@ -764,13 +789,13 @@ class Namespace: # backend puppetmaster class - allows user management
         else:
             for sd in workingDir.subdirs:
                 if sd.name == obj_of_interest:
-                    print("chown: obj is a dir")
-                    return 
+                    found = sd
+                    break 
             else:
                 print("chown: No such file or directory")
                 return
 
-        found.owner = new_owner
+        found.owner = new_owner # file or dir
         return 
 
 
@@ -942,7 +967,7 @@ def main():
     namespace.addUser(User("root", True, namespace.rootDir))
     namespace.setRootUser(namespace.userLs[0])
     
-    namespace.setCurrentUser(namespace.rootUser)
+    namespace.setCurrentUser(namespace.userLs[0])
     namespace.rootDir.owner = namespace.rootUser
 
     currUser = namespace.currentUser
