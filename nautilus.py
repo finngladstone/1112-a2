@@ -1,4 +1,6 @@
+from locale import currency
 from re import sub
+from symbol import arglist
 
 
 class AncestorError(Exception):
@@ -619,11 +621,20 @@ class Namespace: # backend puppetmaster class - allows user management
                         to_modify[2] = "x"
 
             elif operator == "=":
-                
+
                 i = 0
                 while i < 3:
-                    to_modify[i] = bits[i]
+                    to_modify[i] = "-"
                     i+=1
+
+                
+                for char in bits:
+                    if char == "r":
+                        to_modify[0] = "r"
+                    if char == "w":
+                        to_modify[1] = "w"
+                    if char == "x":
+                        to_modify[2] = "x"
             
             elif operator == "-":
                 
@@ -732,11 +743,85 @@ class Namespace: # backend puppetmaster class - allows user management
         print("su: Invalid user")
         return 
 
-    def ls(self, path=None, l=None, d=None, a=None):
-        for i in self.currentUser.currentDir.files:
-            print(i.name + " " + i.output_perms())
-        for y in self.currentUser.currentDir.subdirs:
-            print("/" + y.name + " " + y.output_perms())
+    def ls(self, *args):
+
+        modifiers = ["-a", "-d", "-l"]
+
+        if len(args) == 0:
+            object_to_ls = self.currentUser.currentDir 
+        
+        elif args[0] in modifiers:
+            object_to_ls = self.currentUser.currentDir
+        
+        else:
+            path = args[0]
+
+            object_to_ls = None
+            # path specified -> need to find object 
+            workingDir = self.get_working_dir(path)
+            pathLs = pathSplit(path)
+
+            object_to_ls = pathLs.pop()
+
+            if len(pathLs) > 0:
+                try:
+                    workingDir = self.pathParser(pathLs, workingDir)
+                except AncestorError:
+                    print("ls: No such file or directory")
+                    return
+                except IsAFileError:
+                    print("ls: No such file or directory")
+                    return
+
+            for subdir in workingDir.subdirs:
+                if subdir.name == object_to_ls:
+                    object_to_ls = subdir 
+                    break 
+            else: # https://book.pythontips.com/en/latest/for_-_else.html
+                for fl in workingDir.files:
+                    if fl.name == object_to_ls:
+                        object_to_ls = fl
+                        
+            if object_to_ls == None:
+                print("ls: No such file or directory")
+                return 
+
+        if isinstance(object_to_ls, Directory):
+            if "-a" in args:
+                #print hidden dirs/files
+                pass
+
+            if "-d" in args and "-l" in args:
+                print("{} {} {}".format(object_to_ls.output_perms(), object_to_ls.owner.name, object_to_ls.name))
+                
+            elif "-d" in args:
+                print("{}".format(object_to_ls.name))
+
+            elif "-l" in args:
+                for fl in object_to_ls.files:
+                    print("{} {} {}".format(fl.output_perms(), fl.owner.name, fl.name))
+                for sd in object_to_ls.subdirs:
+                    print("{} {} {}".format(sd.output_perms(), sd.owner.name, sd.name))
+
+            else:
+                for fl in object_to_ls.files:
+                    print("{}".format(fl.name))
+                for sd in object_to_ls.subdirs:
+                    print("{}".format(sd.name))
+
+
+        elif isinstance(object_to_ls, File): 
+            if "-l" in args:
+                print("{} {} {}".format(object_to_ls.output_perms(), object_to_ls.owner, object_to_ls.name))
+            else:
+                print("{}".format(object_to_ls.name))
+            
+            return 
+            
+        else:
+            print("Wrong object passed")
+            return 
+
 
 
 
@@ -749,6 +834,7 @@ def main():
     namespace.setRootUser(namespace.userLs[0])
     
     namespace.setCurrentUser(namespace.rootUser)
+    namespace.rootDir.owner = namespace.rootUser
 
     currUser = namespace.currentUser
 
