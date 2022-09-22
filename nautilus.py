@@ -641,13 +641,16 @@ class Namespace: # backend puppetmaster class - allows user management
 
         if len(pathLs) > 0:     # attempt to navigate to directory in which the fill will exist
             try:
-                workingDir = self.pathParser(pathLs, workingDir)
+                workingDir = self.pathParser(pathLs, workingDir, False, True)
             except AncestorError:
                 print("rm: No such file")
                 return
             except IsAFileError:
                 print("rm: No such file")
                 return
+            except PermissionsError:
+                print("rm: Permission denied")
+                return 
 
         for subdir in workingDir.subdirs: # if subdir already exists with same name
             if subdir.name == objectOfInterest:
@@ -656,12 +659,24 @@ class Namespace: # backend puppetmaster class - allows user management
 
         for file in workingDir.files: # file is found and correctly removed 
             if file.name == objectOfInterest:
-                workingDir.files.remove(file)
-                return 
+                fl = file
+                break 
+        else: 
+            print("rm: No such file")
+            return 
 
-        # only executed if other routes fail 
-        print("rm: No such file")
-        return 
+        if self.currentUser == self.rootUser:
+            pass
+        elif self.currentUser == workingDir.owner:
+            if (not "w" in workingDir.get_owner_perms()) or (not "w" in fl.get_owner_perms()):
+                print("rm: Permission denied")
+                return 
+        else:
+            if (not "w" in workingDir.get_other_perms()) or (not "w" in fl.get_other_perms()):
+                print("rm: Permission denied")
+                return
+
+        workingDir.files.remove(file)
 
     def rmdir(self, path):
 
@@ -937,7 +952,8 @@ class Namespace: # backend puppetmaster class - allows user management
             return 
 
         if (self.currentUser != self.rootUser):
-            return 
+            print("deluser: Operation not permitted") 
+            return
         
         temp = None
         for usr in self.userLs:
