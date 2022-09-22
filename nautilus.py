@@ -1,6 +1,3 @@
-from logging import root
-
-
 class AncestorError(Exception):
     pass
 
@@ -8,6 +5,9 @@ class IsAFileError(Exception):
     pass
 
 class NoDirectoryError(Exception):
+    pass
+
+class PermissionsError(Exception):
     pass
 
 def path_split(dir):
@@ -163,7 +163,7 @@ class Namespace: # backend puppetmaster class - allows user management
 
         return False 
 
-    def pathParser(self, dir, workingDir, p=None, r=None):
+    def pathParser(self, dir, workingDir, p=None, perms=False):
 
         if isinstance(dir, list):
             pass
@@ -186,6 +186,20 @@ class Namespace: # backend puppetmaster class - allows user management
 
                 for surs in workingDir.subdirs:
                     if surs.name == item:
+
+                        if (perms):
+                            """ PERMS CHECK """
+
+                            if self.currentUser == self.rootUser:
+                                pass
+                            else:
+                                if self.currentUser == surs.owner:
+                                    if not "x" in surs.get_other_perms():
+                                        raise PermissionsError 
+                                else:
+                                    if not "x" in surs.get_other_perms():
+                                        raise PermissionsError
+
                         workingDir = surs
                         allocated = True 
             
@@ -303,19 +317,25 @@ class Namespace: # backend puppetmaster class - allows user management
         if len(pathLs) > 0:
             if p:
                 try:
-                    workingDir = self.pathParser(pathLs, workingDir, True) # pathParser command with recursive create
+                    workingDir = self.pathParser(pathLs, workingDir, True, True) # pathParser command with recursive create
                 except IsAFileError:
                     print("mkdir: Parent directory already exists as file")
                     return
+                except PermissionsError:
+                    print("mkdir: Permission denied")
+                    return 
             else:
                 try:
-                    workingDir = self.pathParser(pathLs, workingDir)
+                    workingDir = self.pathParser(pathLs, workingDir, False, True)
                 except AncestorError:
                     print("mkdir: Ancestor directory does not exist")
                     return
                 except IsAFileError:
                     print("mkdir: Ancestor directory does not exist")
                     return
+                except PermissionsError:
+                    print("mkdir: Permission denied")
+                    return 
             
         # check if desired subdir is a file 
         for file in workingDir.files:
@@ -332,6 +352,18 @@ class Namespace: # backend puppetmaster class - allows user management
                     print("mkdir: File exists")
 
                 return
+
+        if self.currentUser == self.rootUser:
+            pass
+        elif self.currentUser == workingDir.owner:
+            if not "w" in workingDir.get_owner_perms():
+                print("mkdir: Permission denied")
+                return
+        else:
+            if not "w" in workingDir.get_other_perms():
+                print("mkdir: Permission denied")
+                return
+            
 
         workingDir.subdirs.append(Directory(objectOfInterest, workingDir, self.currentUser))
         return
@@ -604,7 +636,7 @@ class Namespace: # backend puppetmaster class - allows user management
 
                     """ PERMS CHECK """
 
-                    if self.currentUser == root:
+                    if self.currentUser == self.rootUser:
                         pass 
                     else:
                         pass
