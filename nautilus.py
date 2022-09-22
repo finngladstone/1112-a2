@@ -681,10 +681,54 @@ class Namespace: # backend puppetmaster class - allows user management
         fl.other_perms = "".join(other_bits)
 
     def chown(self, path, user, r=None):
-        pass 
+
+        if (self.currentUser != self.rootUser):
+            print("chown: Operation not permitted")
+            return 
+
+        for usr in self.userLs:
+            if (usr.name == user):
+                new_owner = usr 
+                break 
+        else:
+            print("chown: Invalid user")
+            return 
+
+        workingDir = self.get_working_dir(path)
+
+        pathLs = pathSplit(path)
+
+        obj_of_interest = pathLs.pop()
+
+        if len(pathLs) > 0:
+            try:
+                workingDir = self.pathParser(pathLs, workingDir)
+            except AncestorError:
+                print("chown: No such file or directory")
+                return
+            except IsAFileError:
+                print("chown: No such file or directory")
+                return 
+
+        for file in workingDir.files:
+            if file.name == obj_of_interest:
+                found = file 
+                break 
+        else:
+            for sd in workingDir.subdirs:
+                if sd.name == obj_of_interest:
+                    print("chown: obj is a dir")
+                    return 
+
+        found.owner = new_owner
+        return 
+
+
+        
 
     def adduser(self, user):
         if (self.currentUser != self.rootUser): # current user must be root
+            print("adduser: Operation not permitted")
             return 
         
         for usr in self.userLs:
@@ -843,7 +887,7 @@ def main():
         "cd":namespace.cd, "mkdir":namespace.mkdir, \
             "touch":namespace.touch, "ls":namespace.ls, "cp": namespace.cp, \
                 "mv": namespace.mv, "rm": namespace.rm, "rmdir": namespace.rmdir, "su": namespace.su, \
-                    "adduser": namespace.adduser, "deluser": namespace.deluser, "chmod": namespace.chmod}
+                    "adduser": namespace.adduser, "deluser": namespace.deluser, "chmod": namespace.chmod, "chown":namespace.chown}
 
     while True: # cmdline interpreter loop 
         currUser = namespace.currentUser
