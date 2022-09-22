@@ -719,6 +719,9 @@ class Namespace: # backend puppetmaster class - allows user management
                 if sd.name == obj_of_interest:
                     print("chown: obj is a dir")
                     return 
+            else:
+                print("chown: No such file or directory")
+                return
 
         found.owner = new_owner
         return 
