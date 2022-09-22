@@ -384,12 +384,15 @@ class Namespace: # backend puppetmaster class - allows user management
 
         if len(pathLs) > 0:     # attempt to navigate to directory in which the fill will exist
             try:
-                workingDir = self.pathParser(pathLs, workingDir)
+                workingDir = self.pathParser(pathLs, workingDir, False, True)
             except AncestorError:
                 print("touch: Ancestor directory does not exist")
                 return
             except IsAFileError:
                 print("touch: Ancestor directory does not exist")
+                return
+            except PermissionsError:
+                print("touch: Permission denied")
                 return
 
         for file in workingDir.files: # if file already exists with same name
@@ -399,6 +402,22 @@ class Namespace: # backend puppetmaster class - allows user management
         for subdir in workingDir.files: # if subdir already exists with same name
             if subdir.name == objectOfInterest:
                 return 
+        
+        if workingDir == self.rootDir and self.currentUser != self.rootUser:
+            if "x" not in workingDir.get_other_perms():
+                print("touch: Permission denied")
+                return 
+
+        if self.currentUser == self.rootUser:
+            pass 
+        elif self.currentUser == workingDir.owner:
+            if not "w" in workingDir.get_owner_perms():
+                print("touch: Permission denied")
+                return
+        else:
+            if not "w" in workingDir.get_other_perms():
+                print("touch: Permission denied")
+                return
 
         workingDir.files.append(File(objectOfInterest, self.currentUser))
 
