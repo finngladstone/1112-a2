@@ -1,3 +1,6 @@
+from typing import Type
+
+
 class AncestorError(Exception):
     pass
 
@@ -7,12 +10,39 @@ class IsAFileError(Exception):
 class NoDirectoryError(Exception):
     pass
 
-def pathSplit(dir):
+def path_split(dir):
     pathLs = dir.split("/") # converts path to list object 
     if "" in pathLs:        # preprocessing for pathParser()
         pathLs.remove("")
     
     return pathLs
+
+def is_valid(obj: str): # goated n^2 time complexity 
+    valid_set = ["a", "b", "c", "d", "e", "f", 
+    "g", "h", "i", "j", "k", "l", 
+    "m", "n", "o", "p", "q", "r", 
+    "s", "t", "u", "v", "w", "x", "y", 
+    "z", "0", "1", "2", "3", "4", "5", 
+    "6", "7", "8", "9", "-", ".", "_", "\"", " ", "\u044f"]
+
+    for char in obj.lower():
+        if char not in valid_set:
+            return False 
+
+    return True 
+
+def clean_dir(obj: str):
+    ls = list(obj)
+
+    i = 0
+    while i < len(ls):
+        if ls[i] == "\u044f":
+            ls[i] = " "
+        
+        i+=1
+
+    return "".join(ls)
+
 
 
 def printWarning():
@@ -56,9 +86,9 @@ class Directory:
         if (self.parent == None):
             return "/"
         elif (self.parent.parent == None):
-            return self.parent.getPath() + self.name 
+            return self.parent.getPath() + self.name.replace("\u044f", " ").replace('\"', "")
         else: 
-            return self.parent.getPath() + "/{}".format(self.name)         
+            return self.parent.getPath() + "/{}".format(self.name.replace("\u044f", " ").replace('\"', ""))         
 
     def get_owner_perms(self):
         return self.owner_perms
@@ -211,9 +241,12 @@ class Namespace: # puppetmaster class
             return 
         
         workingDir = self.get_working_dir(dir)
-        pathLs = pathSplit(dir)
+        pathLs = path_split(dir)
         
         objectOfInterest = pathLs.pop() # dir we are attempting to reach (at the end of the dir tree)
+
+        if not (is_valid(objectOfInterest)):
+            raise TypeError
 
         if len(pathLs) > 0:     # if path is in form dir_a/dir_b/dir_c
             try:
@@ -244,7 +277,7 @@ class Namespace: # puppetmaster class
             for subdir in workingDir.subdirs:
                 if subdir.name == objectOfInterest:
                     self.currentUser.updateCurrentDir(subdir)
-                break 
+                    break 
             else:
                 print("cd: No such file or directory")
         return 
@@ -253,9 +286,16 @@ class Namespace: # puppetmaster class
 
     def mkdir(self, dir, p=None): # need to implement perms! 
 
+        if p:
+            if p != "-p":
+                raise TypeError
+
         workingDir = self.get_working_dir(dir)
-        pathLs = pathSplit(dir)
+        pathLs = path_split(dir)
         objectOfInterest = pathLs.pop() # dir we are attempting to reach (at the end of the dir tree)
+
+        if not (is_valid(objectOfInterest)):
+            raise TypeError
 
         if len(pathLs) > 0:
             if p:
@@ -299,9 +339,12 @@ class Namespace: # puppetmaster class
 
         workingDir = self.get_working_dir(dir)
 
-        pathLs = pathSplit(dir) # path preprocessing
+        pathLs = path_split(dir) # path preprocessing
         
         objectOfInterest = pathLs.pop() # dir we are attempting to reach (at the end of the dir tree)
+
+        if not is_valid(objectOfInterest):
+            raise TypeError
 
         if len(pathLs) > 0:     # attempt to navigate to directory in which the fill will exist
             try:
@@ -330,11 +373,14 @@ class Namespace: # puppetmaster class
         destination_working_dir = self.get_working_dir(destination)
         
 
-        source_path = pathSplit(source)
-        destination_path = pathSplit(destination)
+        source_path = path_split(source)
+        destination_path = path_split(destination)
 
         source_file = source_path.pop()
         destination_file = destination_path.pop()
+
+        if not (is_valid(source_file) and is_valid(destination_file)):
+            raise TypeError
 
         if len(source_path) > 0: # check the error messages here
             try:
@@ -393,11 +439,14 @@ class Namespace: # puppetmaster class
         source_working_dir = self.get_working_dir(source)
         destination_working_dir = self.get_working_dir(destination)
 
-        source_path = pathSplit(source)
-        destination_path = pathSplit(destination)
+        source_path = path_split(source)
+        destination_path = path_split(destination)
 
         source_file = source_path.pop()
         destination_file = destination_path.pop()
+
+        if not(is_valid(source_file) and is_valid(destination_file)):
+            raise TypeError
 
         if len(source_path) > 0: # check the error messages here
             try:
@@ -461,9 +510,12 @@ class Namespace: # puppetmaster class
 
         workingDir = self.get_working_dir(dir)
 
-        pathLs = pathSplit(dir) # path preprocessing
+        pathLs = path_split(dir) # path preprocessing
         
         objectOfInterest = pathLs.pop() # dir we are attempting to reach (at the end of the dir tree)
+
+        if not is_valid(objectOfInterest):
+            raise TypeError
 
         if len(pathLs) > 0:     # attempt to navigate to directory in which the fill will exist
             try:
@@ -500,8 +552,11 @@ class Namespace: # puppetmaster class
             
             return
 
-        pathLs = pathSplit(path)
+        pathLs = path_split(path)
         dir_to_delete = pathLs.pop()
+
+        if not is_valid(dir_to_delete):
+            raise TypeError
 
         if len(pathLs) > 0:
             try:
@@ -558,9 +613,12 @@ class Namespace: # puppetmaster class
             fl = self.rootDir
         else:
             workingDir = self.get_working_dir(path)
-            pathLs = pathSplit(path)
+            pathLs = path_split(path)
 
             obj_of_interest = pathLs.pop()  
+
+            if not is_valid(obj_of_interest):
+                raise TypeError
 
             if len(pathLs) > 0:
                 try:
@@ -688,9 +746,12 @@ class Namespace: # puppetmaster class
 
         workingDir = self.get_working_dir(path)
 
-        pathLs = pathSplit(path)
+        pathLs = path_split(path)
 
         obj_of_interest = pathLs.pop()
+
+        if not is_valid(obj_of_interest):
+            raise TypeError
 
         if len(pathLs) > 0:
             try:
@@ -795,7 +856,7 @@ class Namespace: # puppetmaster class
             object_to_ls = None
             # path specified -> need to find object 
             workingDir = self.get_working_dir(path)
-            pathLs = pathSplit(path)
+            pathLs = path_split(path)
 
             object_to_ls = pathLs.pop()
 
@@ -823,34 +884,36 @@ class Namespace: # puppetmaster class
                 return 
 
         if isinstance(object_to_ls, Directory):
+
             if "-a" in args:
                 #print hidden dirs/files
                 pass
 
             if "-d" in args and "-l" in args:
-                print("{} {} {}".format(object_to_ls.output_perms(), object_to_ls.owner.name, object_to_ls.name))
+                
+                print("{} {} {}".format(object_to_ls.output_perms(), object_to_ls.owner.name, object_to_ls.name.replace("\u044f", " ").replace('\"', "")))
                 
             elif "-d" in args:
                 print("{}".format(object_to_ls.name))
 
             elif "-l" in args:
                 for fl in object_to_ls.files:
-                    print("{} {} {}".format(fl.output_perms(), fl.owner.name, fl.name))
+                    print("{} {} {}".format(fl.output_perms(), fl.owner.name, fl.name.replace("\u044f", " ").replace('\"', "")))
                 for sd in object_to_ls.subdirs:
-                    print("{} {} {}".format(sd.output_perms(), sd.owner.name, sd.name))
+                    print("{} {} {}".format(sd.output_perms(), sd.owner.name, sd.name.replace("\u044f", " ").replace('\"', "")))
 
             else:
                 for fl in object_to_ls.files:
-                    print("{}".format(fl.name))
+                    print("{}".format(fl.name.replace("\u044f", " ").replace('\"', "")))
                 for sd in object_to_ls.subdirs:
-                    print("{}".format(sd.name))
+                    print("{}".format(sd.name.replace("\u044f", " ").replace('\"', "")))
 
 
         elif isinstance(object_to_ls, File): 
             if "-l" in args:
-                print("{} {} {}".format(object_to_ls.output_perms(), object_to_ls.owner.name, object_to_ls.name))
+                print("{} {} {}".format(object_to_ls.output_perms(), object_to_ls.owner.name, object_to_ls.name.replace("\u044f", " ").replace('\"', "")))
             else:
-                print("{}".format(object_to_ls.name))
+                print("{}".format(object_to_ls.name.replace("\u044f", " ").replace('\"',"")))
             
             return 
             
@@ -886,8 +949,21 @@ def main():
         lineStart = "{}:{}$ ".format(currUser.name, currUser.currentDir.getPath())
         keyboard = input(lineStart)
 
-        keyboard = keyboard.split()
+        if "\"" in keyboard: # for processing quotes
+            start = keyboard.find("\"")
+            end = keyboard[start+1:].find("\"")
 
+            ls = list(keyboard)
+            i = start 
+            while i < (start + end):
+                if ls[i] == " ":
+                    ls[i] = "\u044f"
+                i+=1
+            
+            keyboard = "".join(ls)
+
+        keyboard = keyboard.split()
+        
         if (len(keyboard) != 0):
             cmd = keyboard[0] 
 
@@ -896,8 +972,8 @@ def main():
                 fnList[cmd]()
             except KeyError:
                 print("{}: Command not found".format(cmd))
-            except TypeError: # can block some hard crash errors - might need to refactor
-                print("{}: Invalid syntax".format(cmd))
+            # except TypeError: # can block some hard crash errors - might need to refactor
+            #     print("{}: Invalid syntax".format(cmd))
             
         elif len(keyboard) > 1:
             args = keyboard[-1:0:-1] # reverses args to allow for optional args 
