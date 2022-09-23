@@ -1,0 +1,9 @@
+mkdir first 
+mkdir first/nested 
+mkdir /first/nested/absolute 
+ls
+ls /first 
+ls first/nested
+touch file_exists
+mkdir file_exists
+exit

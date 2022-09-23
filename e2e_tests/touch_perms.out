@@ -1,0 +1,3 @@
+root:/$ root:/$ root:/$ root:/$ user:/$ user:/$ this_works
+user:/$ user:/$ root:/$ root:/$ user:/$ touch: Permission denied
+user:/$ bye, user

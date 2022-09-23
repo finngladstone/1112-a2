@@ -1,0 +1,15 @@
+adduser user
+mkdir has_permission
+chmod o+w has_permission
+
+su user
+mkdir /has_permission/new_dir
+ls /has_permission
+
+su root 
+mkdir no_perms
+
+su user
+mkdir no_perms/this_should_not_work
+mkdir /this_should_not_work_either
+exit

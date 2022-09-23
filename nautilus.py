@@ -142,6 +142,32 @@ class Namespace: # backend puppetmaster class - allows user management
 
     """ NAMESPACE HELPER COMMANDS"""
 
+    def has_execute_perms(self, obj):
+        if self.currentUser == self.rootUser:
+            return True 
+        
+        if self.currentUser == obj.owner:
+            if "x" in obj.get_owner_perms():
+                return True 
+        else:
+            if "x" in obj.get_other_perms():
+                return True 
+        
+        return False
+
+    def has_write_perms(self, obj):
+        if self.currentUser == self.rootUser:
+            return True 
+        
+        if self.currentUser == obj.owner:
+            if "w" in obj.get_owner_perms():
+                return True 
+        else:
+            if "w" in obj.get_other_perms():
+                return True 
+        
+        return False
+
     def get_working_dir(self, path): # used by path-interpreting fns to determine if path is rel or absolute
 
         if path[0] == '/':
@@ -375,6 +401,10 @@ class Namespace: # backend puppetmaster class - allows user management
 
         workingDir = self.get_working_dir(dir)
 
+        if not self.has_execute_perms(workingDir):
+            print("touch: Permission denied")
+            return
+
         pathLs = path_split(dir) # path preprocessing
         
         objectOfInterest = pathLs.pop() # dir we are attempting to reach (at the end of the dir tree)
@@ -399,7 +429,7 @@ class Namespace: # backend puppetmaster class - allows user management
             if file.name == objectOfInterest:
                 return 
         
-        for subdir in workingDir.files: # if subdir already exists with same name
+        for subdir in workingDir.subdirs: # if subdir already exists with same name
             if subdir.name == objectOfInterest:
                 return 
         
@@ -1109,7 +1139,10 @@ def main():
         currUser = namespace.currentUser
 
         lineStart = "{}:{}$ ".format(currUser.name, currUser.currentDir.getPath())
-        keyboard = input(lineStart)
+        try: 
+            keyboard = input(lineStart)
+        except EOFError:
+            break
         
 
         if "\"" in keyboard: # for processing quotes

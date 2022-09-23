@@ -1,0 +1,6 @@
+pwd
+mkdir example
+cd example
+pwd
+cd /
+exit

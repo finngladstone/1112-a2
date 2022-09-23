@@ -1,0 +1,17 @@
+adduser user
+mkdir has_perms
+chmod o+w has_perms
+su user
+touch /has_perms/this_works
+ls /has_perms
+
+su root 
+mkdir no_perms 
+su user 
+touch /no_perms/this_should_not_work
+
+su root 
+chmod o-x / 
+su user 
+touch /has_perms/this_also_should_not_work
+exit

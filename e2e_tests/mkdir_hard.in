@@ -1,0 +1,10 @@
+mkdir -p recursive/test
+ls /recursive 
+mkdir -p /this/is/a/test2
+ls /this/is/a
+
+mkdir -p we/are/pushing/the/limits
+ls we/are/pushing/the/
+
+mkdir we/are/pushing/the/limits/this/is/oh-n-to-the-fourth/complexity
+exit

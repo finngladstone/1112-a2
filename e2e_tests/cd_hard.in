@@ -1,0 +1,6 @@
+mkdir -p one/two/three
+cd one/two
+cd one/two/three
+cd /
+cd /two/three
+exit

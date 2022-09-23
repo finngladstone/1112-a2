@@ -1,0 +1,6 @@
+adduser user
+mkdir no_perms 
+chmod o-x no_perms
+su user 
+cd no_perms 
+exit

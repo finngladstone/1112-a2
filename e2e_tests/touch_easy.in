@@ -1,0 +1,7 @@
+mkdir file_storage
+touch file
+touch file_storage
+touch file_storage/file_1
+touch file_storage/file_2
+touch file_storage_2/file_1
+exit
