@@ -1,0 +1,20 @@
+adduser user 
+mkdir source 
+touch source/fl 
+chmod o+w /
+
+mkdir destination 
+su user 
+cp source/fl destination/newfl
+
+mkdir new_destination
+cp source/fl new_destination/newfl
+ls new_destination 
+
+su root
+chmod o-x /
+su user 
+cp source/fl new_destination/newfl2
+ls new_destination
+
+exit

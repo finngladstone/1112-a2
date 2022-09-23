@@ -1,0 +1,20 @@
+rmdir nothing
+
+mkdir hello 
+rmdir hello
+
+mkdir /hello/
+rmdir /hello/
+
+mkdir not_empty 
+mkdir not_empty/is_inside
+
+rmdir not_empty
+
+rmdir is_inside
+
+rmdir not_empty/is_inside
+
+ls not_empty
+
+exit

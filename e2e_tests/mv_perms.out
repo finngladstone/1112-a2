@@ -1,0 +1,7 @@
+root:/$ root:/$ root:/$ root:/$ root:/$ root:/$ root:/$ root:/$ root:/$ root:/$ user:/$ user:/$ newfile
+user:/$ user:/$ user:/$ root:/$ root:/$ root:/$ root:/$ root:/$ root:/$ user:/$ mv: Permission denied
+user:/$ file2
+user:/$ user:/$ mv: Permission denied
+user:/$ user:/$ root:/$ root:/$ root:/$ root:/$ root:/$ user:/$ mv: Permission denied
+user:/$ newfile
+user:/$ user:/$ root:/$ bye, root

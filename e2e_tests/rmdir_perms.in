@@ -1,0 +1,19 @@
+adduser user
+mkdir has_perms
+chmod o+w /
+
+su user
+rmdir has_perms
+ls /
+
+su root
+mkdir no_perms
+chmod o-wx /
+
+su user
+rmdir no_perms
+ls /
+
+su root
+
+exit

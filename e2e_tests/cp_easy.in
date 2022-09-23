@@ -1,0 +1,12 @@
+mkdir from
+mkdir to
+
+touch from/file
+
+cp from/file to/new_file
+ls to
+
+cp from to/new_file_2
+
+cp from/file to
+exit

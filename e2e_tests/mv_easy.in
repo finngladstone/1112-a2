@@ -1,0 +1,14 @@
+mkdir test
+mv test destination/new_file
+mkdir destination 
+mv test destination/new_file 
+
+touch test/original_file
+
+mv test/original_file destination
+mv test/original_file destination/new_file
+
+ls test 
+ls destination
+
+exit

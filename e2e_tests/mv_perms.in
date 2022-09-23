@@ -1,0 +1,37 @@
+mkdir source_has_perms
+chmod o+w source_has_perms
+
+mkdir destination_has_perms
+chmod o+w destination_has_perms 
+
+touch source_has_perms/file
+
+adduser user
+su user 
+mv source_has_perms/file destination_has_perms/newfile
+ls destination_has_perms
+ls source_has_perms
+
+su root 
+mkdir source_no_perms 
+mkdir destination_no_perms 
+touch source_no_perms/file2 
+touch source_has_perms/file3
+
+su user 
+mv source_no_perms/file2 destination_has_perms/file2
+ls source_no_perms
+
+mv source_has_perms/file3 destination_no_perms/new_file3
+
+su root 
+
+chmod o-x /
+touch source_has_perms/file4
+
+su user 
+mv source_has_perms/file4 destination_has_perms/ancestor_no_perms_file
+ls destination_has_perms/
+
+su root 
+exit

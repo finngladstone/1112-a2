@@ -1,0 +1,31 @@
+mkdir directory
+touch directory/fl
+chmod o+w directory/fl
+chmod o+w /directory
+
+adduser user
+su user
+
+rm directory/fl
+ls directory
+
+su root 
+
+touch directory/fl2
+chmod o-w directory/fl2 
+
+su user 
+
+rm directory/fl2
+ls directory
+
+su root 
+chmod o+w directory/fl2 
+chmod o-w directory
+
+su user 
+
+rm directory/fl2 
+ls directory
+
+exit

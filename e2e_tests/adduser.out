@@ -1,0 +1,11 @@
+root:/$ root:/$ root:/$ adduser: The user already exists
+root:/$ root:/$ new_user:/$ new_user:/$ adduser: Operation not permitted
+new_user:/$ new_user:/$ adduser: Operation not permitted
+new_user:/$ new_user:/$ root:/$ root:/$ root:/$ root:/$ root:/$ root:/$ deluser: The user does not exist
+root:/$ root:/$ root:/$ root:/$ su: Invalid user
+root:/$ root:/$ WARNING: You are just about to delete the root account
+Usually this is never required as it may render the whole system unusable
+If you really want this, call deluser with parameter --force
+(but this `deluser` does not allow `--force`, haha)
+Stopping now without having performed any action
+root:/$ root:/$ bye, root

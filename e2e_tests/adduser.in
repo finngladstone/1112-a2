@@ -1,0 +1,25 @@
+adduser new_user 
+
+adduser new_user 
+
+su new_user 
+
+adduser user2 
+
+adduser new_user
+
+su root 
+
+adduser user2
+
+deluser new_user
+
+deluser new_user 
+
+deluser user2 
+
+su user2
+
+deluser root
+
+exit

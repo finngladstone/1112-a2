@@ -1,0 +1,6 @@
+root:/$ cp: No such file
+root:/$ root:/$ root:/$ root:/$ root:/$ cp: No such file or directory
+root:/$ root:/$ root:/$ cp: Destination is a directory
+root:/$ root:/$ new_file
+root:/$ root:/$ cp: File exists
+root:/$ root:/$ bye, root

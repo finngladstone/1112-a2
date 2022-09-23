@@ -1,0 +1,35 @@
+adduser user 
+chmod o+w /
+
+touch file 
+
+su user 
+rm file
+
+su root 
+chmod o+w file 
+su user 
+
+rm file
+
+ls 
+
+su root
+
+mkdir nested 
+touch nested/file2 
+
+chmod o+w nested
+
+su user 
+rm nested/file2
+
+su root 
+chmod o+w nested/file2
+
+su user 
+rm nested/file2
+
+ls nested
+
+exit

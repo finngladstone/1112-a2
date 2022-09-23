@@ -12,7 +12,8 @@ class PermissionsError(Exception):
 
 def path_split(dir):
     pathLs = dir.split("/") # converts path to list object 
-    if "" in pathLs:        # preprocessing for pathParser()
+    
+    while "" in pathLs:  # preprocessing for pathParser()
         pathLs.remove("")
     
     return pathLs
@@ -168,6 +169,25 @@ class Namespace: # backend puppetmaster class - allows user management
         
         return False
 
+    def ancestor_perms(self, obj: Directory):
+        if obj.parent == None:
+            if self.currentUser == obj.owner:
+                if "x" in obj.get_owner_perms():
+                    return True
+            else:
+                if "x" in obj.get_other_perms():
+                    return True
+        else:
+            if self.currentUser == obj.owner:
+                if "x" in obj.get_owner_perms():
+                    return self.ancestor_perms(obj.parent)
+            else:
+                if "x" in obj.get_other_perms():
+                    return self.ancestor_perms(obj.parent)
+        
+        return False
+
+
     def get_working_dir(self, path): # used by path-interpreting fns to determine if path is rel or absolute
 
         if path[0] == '/':
@@ -190,6 +210,13 @@ class Namespace: # backend puppetmaster class - allows user management
         return False 
 
     def pathParser(self, dir, workingDir, p=None, perms=False):
+
+        if (perms):
+            if self.ancestor_perms(workingDir):
+                pass 
+            else:
+                raise PermissionsError
+
 
         if isinstance(dir, list):
             pass
@@ -728,13 +755,16 @@ class Namespace: # backend puppetmaster class - allows user management
 
         if len(pathLs) > 0:
             try:
-                workingDir = self.pathParser(pathLs, workingDir)
+                workingDir = self.pathParser(pathLs, workingDir, False, True)
             except AncestorError:
                 print("rmdir: No such file or directory")
                 return
             except IsAFileError:
                 print("rmdir: No such file or directory")
                 return 
+            except PermissionsError:
+                print("rmdir: Permission denied")
+                return
 
         if dir_to_delete == '.':
             print("rmdir: Cannot remove pwd")
@@ -749,6 +779,18 @@ class Namespace: # backend puppetmaster class - allows user management
             print("rmdir: Cannot remove pwd")
             return 
 
+        if self.currentUser == self.rootUser:
+            pass
+        elif self.currentUser == workingDir.owner:
+            if not "w" in workingDir.get_owner_perms():
+                print("rmdir: Permission denied")
+                return
+        else:
+            if not "w" in workingDir.get_other_perms():
+                print("rmdir: Permission denied")
+                return 
+            
+
         for file in workingDir.files:
             if file.name == dir_to_delete:
                 print("rmdir: Not a directory")
@@ -756,25 +798,32 @@ class Namespace: # backend puppetmaster class - allows user management
 
         for subdir in workingDir.subdirs:
             if subdir.name == dir_to_delete:
-                if len(subdir.subdirs) == 0 and len(subdir.files) == 0:
+                obj = subdir 
+                break
 
-                    """ PERMS CHECK """
+        else:
+            # no other logic activated clause 
+            print("rmdir: No such file or directory")
+            return 
 
-                    if self.currentUser == self.rootUser:
-                        pass 
-                    else:
-                        pass
-                    
+        if len(obj.subdirs) == 0 and len(obj.files) == 0:
 
-                    workingDir.subdirs.remove(subdir)
-                    return 
-                else:
-                    print("rmdir: Directory not empty")
-                    return 
+            # """ PERMS CHECK """
+
+            # if self.currentUser == self.rootUser:
+            #     pass 
+            # elif self.currentUser == obj.owner:
+            #     pass 
+            # else:
+            #     if ""
             
-        # no other logic activated clause 
-        print("rmdir: No such file or directory")
 
+            workingDir.subdirs.remove(subdir)
+            return 
+        else:
+            print("rmdir: Directory not empty")
+            return 
+            
 
     def chmod(self, path, perms, r=None): # good luck
 
@@ -820,6 +869,7 @@ class Namespace: # backend puppetmaster class - allows user management
 
         if fl == None:
             print("chmod: No such file or directory")
+            return
 
         if (self.currentUser != fl.owner) and (self.currentUser != self.rootUser):
             print("chmod: Permission denied")

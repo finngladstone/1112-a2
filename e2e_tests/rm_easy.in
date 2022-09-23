@@ -1,0 +1,13 @@
+rm file
+mkdir to_be_deleted
+rm to_be_deleted
+
+touch file
+rm file
+ls
+
+touch to_be_deleted/file2
+rm to_be_deleted/file2
+ls to_be_deleted/
+
+exit

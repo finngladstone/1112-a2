@@ -1,0 +1,15 @@
+cp source destination
+
+mkdir source
+touch source/original_file
+
+cp source/original_file destination/new_file
+mkdir destination 
+
+cp source/original_file destination
+cp source/original_file destination/new_file
+ls destination
+
+cp source/original_file destination/new_file
+
+exit
