@@ -91,7 +91,3 @@ cat e2e_tests/chmod_chown.in | python3 nautilus.py | diff - e2e_tests/chmod_chow
 ##### adduser + deluser + su
 
 cat e2e_tests/adduser.in | python3 nautilus.py | diff - e2e_tests/adduser.out
-
-
-
-[Link to private GitHub repo](https://github.com/finngladstone/1112-a2) if you need, just rq access
